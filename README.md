@@ -18,6 +18,7 @@ It creates and analyzes **entirely fictitious data**. No confidential GTA, CAR, 
 8. Area, overlap, persistence, distance, land-use, deforestation, carbon-emission, supplier-role, and expansion-pathway analyses.
 9. Main and supplementary-style figures and machine-readable tables.
 10. Automated QA checks, provenance manifests, and tests.
+11. A single plain-language Markdown report (`outputs/report/REPORT.md`), with eight additional high-communication-quality charts and a state-level map, written in academic English for a non-specialist reader.
 
 ## Quick start
 
@@ -43,7 +44,13 @@ python -m supply_zones all --clean
 pytest
 ```
 
-The complete run writes data to `data/`, tables to `outputs/tables/`, spatial layers to `outputs/spatial/`, figures to `outputs/figures/`, and validation reports to `outputs/qa/`.
+The complete run writes data to `data/`, tables to `outputs/tables/`, spatial layers to `outputs/spatial/`, figures to `outputs/figures/`, validation reports to `outputs/qa/`, and a consolidated report to `outputs/report/REPORT.md`.
+
+To rebuild only the report and its dedicated figures from already-computed tables:
+
+```bash
+python -m supply_zones report
+```
 
 ## One-command alternatives
 

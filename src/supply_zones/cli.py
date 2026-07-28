@@ -9,6 +9,7 @@ from supply_zones.matching import link_gta_to_car
 from supply_zones.network import identify_supplier_roles
 from supply_zones.pipeline import clean_generated, load_existing_zones, run_all
 from supply_zones.qa import run_qa, write_output_inventory
+from supply_zones.report import build_report
 from supply_zones.spatial import map_supply_zones
 from supply_zones.synthetic import generate_synthetic_data
 
@@ -19,7 +20,7 @@ def parser() -> argparse.ArgumentParser:
     )
     command_parser.add_argument(
         "command",
-        choices=["generate", "link", "network", "zones", "analyze", "qa", "all", "clean"],
+        choices=["generate", "link", "network", "zones", "analyze", "report", "qa", "all", "clean"],
     )
     command_parser.add_argument("--config", default=None, help="Path to YAML configuration.")
     command_parser.add_argument(
@@ -43,6 +44,10 @@ def main() -> None:
         zones = load_existing_zones(cfg)
         results = characterize_all(cfg, zones)
         create_all_figures(cfg, zones, results)
+    elif args.command == "report":
+        zones = load_existing_zones(cfg)
+        results = characterize_all(cfg, zones)
+        build_report(cfg, zones, results)
     elif args.command == "qa":
         report = run_qa(cfg)
         write_output_inventory(cfg)

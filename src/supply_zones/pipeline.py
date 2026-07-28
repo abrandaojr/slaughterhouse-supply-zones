@@ -10,6 +10,7 @@ from supply_zones.figures import create_all_figures
 from supply_zones.matching import link_gta_to_car
 from supply_zones.network import identify_supplier_roles
 from supply_zones.qa import run_qa, write_output_inventory
+from supply_zones.report import build_report
 from supply_zones.spatial import map_supply_zones
 from supply_zones.synthetic import generate_synthetic_data
 
@@ -27,19 +28,21 @@ def clean_generated(cfg: dict) -> None:
 def run_all(cfg: dict, clean: bool = False) -> None:
     if clean:
         clean_generated(cfg)
-    print("[1/7] Generating fictitious input data")
+    print("[1/8] Generating fictitious input data")
     generate_synthetic_data(cfg)
-    print("[2/7] Linking GTA establishments to CAR-like properties")
+    print("[2/8] Linking GTA establishments to CAR-like properties")
     link_gta_to_car(cfg)
-    print("[3/7] Identifying direct and tier-1 indirect suppliers")
+    print("[3/8] Identifying direct and tier-1 indirect suppliers")
     identify_supplier_roles(cfg)
-    print("[4/7] Selecting spatial-autocorrelation distances and mapping zones")
+    print("[4/8] Selecting spatial-autocorrelation distances and mapping zones")
     zones = map_supply_zones(cfg)
-    print("[5/7] Characterizing zones and expansion pathways")
+    print("[5/8] Characterizing zones and expansion pathways")
     results = characterize_all(cfg, zones)
-    print("[6/7] Creating main and supplementary-style figures")
+    print("[6/8] Creating main and supplementary-style figures")
     create_all_figures(cfg, zones, results)
-    print("[7/7] Running QA gates and writing inventory")
+    print("[7/8] Building the plain-language Markdown report")
+    build_report(cfg, zones, results)
+    print("[8/8] Running QA gates and writing inventory")
     qa = run_qa(cfg)
     write_output_inventory(cfg)
     if (qa["status"] != "PASS").any():

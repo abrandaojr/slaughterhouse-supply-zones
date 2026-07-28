@@ -113,9 +113,9 @@ def chart_landuse_composition(cfg: dict, land_use: pd.DataFrame) -> None:
     ax.set_xlim(0, max(left.max() * 1.02, 100))
     ax.set_xlabel("Share of zone area covered by each land-cover class (%)")
     ax.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.5, -0.16),
-        ncol=4,
+        loc="center left",
+        bbox_to_anchor=(1.02, 0.5),
+        ncol=1,
         frameon=False,
         fontsize=9,
     )
@@ -148,8 +148,8 @@ def chart_moran_correlogram(cfg: dict, incremental_moran: pd.DataFrame) -> None:
         Line2D([0], [0], color="#6096BA", label="Annual correlogram"),
         Line2D([0], [0], marker="o", color="w", markerfacecolor="#B2182B", markersize=7, label="Selected distance (peak I)"),
     ]
-    fig.legend(handles=legend_elements, loc="lower center", ncol=2, frameon=False, bbox_to_anchor=(0.5, -0.05))
-    fig.tight_layout(rect=[0, 0.05, 1, 1])
+    fig.legend(handles=legend_elements, loc="center left", bbox_to_anchor=(1.0, 0.5), ncol=1, frameon=False)
+    fig.tight_layout(rect=[0, 0, 0.9, 1])
     _finish(fig, paths["figures"] / "figure_5_moran_correlogram.png")
 
 
@@ -269,7 +269,7 @@ def chart_alternative_methods(cfg: dict, alternatives: pd.DataFrame) -> None:
     )
     ax.set_xlabel("Zone area, incremental-autocorrelation method (million ha)")
     ax.set_ylabel("Zone area, alternative method (million ha)")
-    ax.legend(frameon=False, loc="upper left", fontsize=9)
+    ax.legend(frameon=False, loc="center left", bbox_to_anchor=(1.02, 0.5), fontsize=9)
     _finish(fig, paths["figures"] / "figure_9_alternative_methods.png")
 
 

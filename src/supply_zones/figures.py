@@ -14,6 +14,7 @@ from matplotlib.patches import Patch
 
 from supply_zones.config import cumulative_scope_label, ensure_directories
 from supply_zones.mapping import add_basemap_if_available
+from supply_zones.report_charts import ZONE_LABELS
 
 
 COLORS = {
@@ -51,7 +52,7 @@ def figure_study_area(cfg: dict) -> None:
         ax.text(point.x, point.y, label, weight="bold", ha="center", fontsize=10)
     add_basemap_if_available(ax, states.crs, paths)
     ax.set_axis_off()
-    ax.legend(frameon=False, loc="lower right")
+    ax.legend(frameon=False, loc="center left", bbox_to_anchor=(1.02, 0.5))
     _finish(fig, paths["figures"] / "figure_1_study_area.png")
 
 
@@ -70,9 +71,10 @@ def figure_zone_overlap(cfg: dict, cumulative: gpd.GeoDataFrame) -> None:
         frame = all_period[all_period["zone_type"] == zone_type]
         frame.plot(ax=ax, color=COLORS[zone_type], alpha=0.5, edgecolor="none")
     ax.legend(
-        handles=[Patch(facecolor=color, alpha=0.6, label=label) for label, color in COLORS.items()],
+        handles=[Patch(facecolor=color, alpha=0.6, label=ZONE_LABELS[key]) for key, color in COLORS.items()],
         frameon=False,
-        loc="lower right",
+        loc="center left",
+        bbox_to_anchor=(1.02, 0.5),
     )
     add_basemap_if_available(ax, study.crs, paths)
     ax.set_axis_off()

@@ -21,14 +21,14 @@ import numpy as np
 import pandas as pd
 from matplotlib.lines import Line2D
 
-from supply_zones.config import ensure_directories
+from supply_zones.config import cumulative_scope_label, ensure_directories, year_range_label
 
 ZONE_ORDER = ["CA_direct", "CA_tier1_indirect", "non_CA_direct", "non_CA_tier1_indirect"]
 ZONE_LABELS = {
-    "CA_direct": "CA direct",
-    "CA_tier1_indirect": "CA tier-1 indirect",
-    "non_CA_direct": "Non-CA direct",
-    "non_CA_tier1_indirect": "Non-CA tier-1 indirect",
+    "CA_direct": "Signatory direct",
+    "CA_tier1_indirect": "Signatory tier-1 indirect",
+    "non_CA_direct": "Non-signatory direct",
+    "non_CA_tier1_indirect": "Non-signatory tier-1 indirect",
 }
 ZONE_COLORS = {
     "CA_direct": "#1B7837",
@@ -80,6 +80,11 @@ def _footer(ax, text: str = "Illustrative synthetic data. No confidential GTA, C
     )
 
 
+def _short_label(name: str) -> str:
+    """Shorten a place name (e.g. 'Rondônia, Brazil') to its first segment for compact map labels."""
+    return name.split(",")[0].strip()
+
+
 def chart_landuse_composition(cfg: dict, land_use: pd.DataFrame) -> None:
     """Stacked bar chart of land-cover composition inside each zone type."""
     paths = ensure_directories(cfg)
@@ -118,8 +123,8 @@ def chart_landuse_composition(cfg: dict, land_use: pd.DataFrame) -> None:
     ax.set_xlim(0, max(left.max() * 1.02, 100))
     ax.set_xlabel("Share of zone area covered by each land-cover class (%)")
     ax.set_title(
-        "Natural vegetation covers about a quarter of CA-linked direct supply zones,\n"
-        "roughly the same share as in non-CA zones",
+        "Figure 4. Natural vegetation covers about a quarter of signatory direct\n"
+        "supply zones, roughly the same share as in non-signatory zones",
         loc="left",
         fontsize=12,
         weight="bold",
@@ -184,8 +189,8 @@ def chart_expansion_pathways(cfg: dict, expansion: pd.DataFrame) -> None:
     paths = ensure_directories(cfg)
     labels = {
         "current_CA_direct": "Current\n(CA direct only)",
-        "pathway_1_add_CA_tier1": "+ CA tier-1\nindirect",
-        "pathway_2_add_non_CA_direct": "+ Non-CA\ndirect",
+        "pathway_1_add_CA_tier1": "+ Signatory tier-1\nindirect",
+        "pathway_2_add_non_CA_direct": "+ Non-signatory\ndirect",
         "pathway_3_all_direct_and_tier1": "All direct\n+ tier-1",
     }
     data = expansion.set_index("scenario").loc[list(labels)]
@@ -214,8 +219,8 @@ def chart_expansion_pathways(cfg: dict, expansion: pd.DataFrame) -> None:
     ax.set_ylabel("Monitored zone area (million ha)", color="#2166AC")
     ax2.set_ylabel("Slaughter volume covered (%)", color="#B2451F")
     ax.set_title(
-        "Figure 6. Extending monitoring to non-CA direct suppliers would roughly triple\n"
-        "the covered slaughter volume, at the cost of a much larger footprint",
+        "Figure 6. Extending monitoring to non-signatory direct suppliers would roughly\n"
+        "triple the covered slaughter volume, at the cost of a much larger footprint",
         loc="left",
         fontsize=12,
         weight="bold",
@@ -232,8 +237,8 @@ def chart_supplier_flows(cfg: dict, flows: pd.DataFrame) -> None:
     """Horizontal bar chart of where cattle leaving CA-linked direct properties go."""
     paths = ensure_directories(cfg)
     labels = {
-        "slaughter_CA": "Slaughtered at a\nCA-signatory plant",
-        "slaughter_non_CA": "Slaughtered at a\nnon-CA plant",
+        "slaughter_CA": "Slaughtered at a\nsignatory plant",
+        "slaughter_non_CA": "Slaughtered at a\nnon-signatory plant",
         "non_slaughter_property_movement": "Moved to another\nproperty (not slaughtered)",
     }
     colors = {
@@ -253,10 +258,10 @@ def chart_supplier_flows(cfg: dict, flows: pd.DataFrame) -> None:
     for bar, value in zip(bars, data["percent"]):
         ax.text(value + 1, bar.get_y() + bar.get_height() / 2, f"{value:.0f}%", va="center", fontsize=10)
     ax.set_xlim(0, max(data["percent"]) * 1.2)
-    ax.set_xlabel("Share of cattle heads leaving CA-linked direct properties (%)")
+    ax.set_xlabel("Share of cattle heads leaving signatory direct properties (%)")
     ax.set_title(
-        "Figure 7. Under half of the cattle leaving CA-linked direct properties are\n"
-        "slaughtered at a CA-signatory plant; the rest exit through other channels",
+        "Figure 7. Under half of the cattle leaving signatory direct properties are\n"
+        "slaughtered at a signatory plant; the rest exit through other channels",
         loc="left",
         fontsize=12,
         weight="bold",
@@ -270,7 +275,7 @@ def chart_distance_distribution(cfg: dict, distances: pd.DataFrame) -> None:
     paths = ensure_directories(cfg)
     labels = {
         "tier1_to_nearest_direct": "Tier-1 indirect supplier\nto nearest direct supplier",
-        "CA_to_nearest_non_CA_slaughterhouse": "CA-signatory plant to\nnearest non-CA plant",
+        "CA_to_nearest_non_CA_slaughterhouse": "Signatory plant to\nnearest non-signatory plant",
     }
     fig, ax = plt.subplots(figsize=(8.5, 4.6))
     groups = [distances.loc[distances["distance_type"] == key, "distance_km"] for key in labels]
@@ -286,7 +291,7 @@ def chart_distance_distribution(cfg: dict, distances: pd.DataFrame) -> None:
     ax.set_ylabel("Distance (km)")
     ax.set_title(
         "Figure 8. Indirect suppliers typically sit within about 35-55 km of a direct\n"
-        "supplier, while CA and non-CA plants are more widely separated",
+        "supplier, while signatory and non-signatory plants are more widely separated",
         loc="left",
         fontsize=12,
         weight="bold",
@@ -363,7 +368,8 @@ def map_state_coverage(cfg: dict, cumulative: gpd.GeoDataFrame) -> None:
     paths = ensure_directories(cfg)
     states = gpd.read_file(paths["raw"] / "synthetic_inputs.gpkg", layer="states")
     zone = cumulative[
-        (cumulative["zone_type"] == "CA_direct") & (cumulative["temporal_scope"] == "2013_2018_union")
+        (cumulative["zone_type"] == "CA_direct")
+        & (cumulative["temporal_scope"] == cumulative_scope_label(cfg))
     ]
     zone_geometry = zone.geometry.iloc[0]
 
@@ -378,19 +384,20 @@ def map_state_coverage(cfg: dict, cumulative: gpd.GeoDataFrame) -> None:
     fig, ax = plt.subplots(figsize=(7.5, 7))
     states.plot(
         ax=ax, column="coverage_percent", cmap="YlGn", edgecolor="#333333", linewidth=1,
-        legend=True, legend_kwds={"label": "Share of state area inside the CA-direct zone (%)", "shrink": 0.7},
+        legend=True, legend_kwds={"label": "Share of regional area inside the signatory direct zone (%)", "shrink": 0.7},
         vmin=0, vmax=max(60, coverage.max() * 1.1),
     )
     for row in states.itertuples(index=False):
         point = row.geometry.representative_point()
+        label = _short_label(getattr(row, "state_name", None) or row.state)
         ax.text(
-            point.x, point.y, f"{row.state}\n{row.coverage_percent:.0f}%",
+            point.x, point.y, f"{label}\n{row.coverage_percent:.0f}%",
             ha="center", va="center", fontsize=10, weight="bold", color="#1A1A1A",
         )
     ax.set_axis_off()
     ax.set_title(
-        "Figure 11. Share of each state's territory falling inside the cumulative\n"
-        "CA-direct supply zone, 2013-2018",
+        f"Figure 11. Share of each region's territory falling inside the cumulative\n"
+        f"signatory direct supply zone, {year_range_label(cfg)}",
         loc="left", fontsize=12, weight="bold",
     )
     _footer(ax)

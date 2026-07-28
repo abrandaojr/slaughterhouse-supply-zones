@@ -1,4 +1,4 @@
-# Mapping Slaughterhouse Supply Zones: A Reproducible, Synthetic Walkthrough
+# Mapping Slaughterhouse Supply Zones: A Reproducible, Geographically Generic Walkthrough
 
 **A plain-language companion to Brandão Jr., Rausch, Munger & Gibbs (2023), *Land*, 12(9), 1782**
 
@@ -6,21 +6,25 @@
 
 ## Executive summary
 
-Cattle raised in the Brazilian Amazon can travel through several properties
-before reaching a slaughterhouse, which makes it hard to know exactly where
-the animals a company buys actually came from. This report walks through a
-complete, open-source workflow that estimates the geographic area, or
-**supply zone**, that feeds each slaughterhouse, and separates that area into
-farms that sell cattle directly to the plant from farms that sell only
-through an intermediary. Using an illustrative synthetic dataset built for
-this repository, across 3 states, 12 slaughterhouses, and the
-years 2013-2018, the workflow finds that the average direct supply zone of a
-Cattle Agreement (CA) signatory covers about 1.2 million
-hectares, that roughly a quarter of that area is natural vegetation, and that
-extending monitoring to indirect suppliers or non-signatory plants would
-substantially widen coverage of the cattle trade at the cost of a much larger
-area to monitor. Every number below comes from fictitious data; the value of
-the exercise is the method, not the estimate.
+Cattle can travel through several properties before reaching a slaughterhouse,
+which makes it hard to know exactly where the animals a company buys actually
+came from. This report walks through a complete, open-source, geographically
+generic workflow that estimates the area, or **supply zone**, that feeds each
+slaughterhouse, and separates that area into farms that sell cattle directly
+to the plant from farms that sell only through an intermediary. The workflow
+can be pointed at any region in the world by naming it in the project
+configuration; real administrative boundaries are then fetched from
+OpenStreetMap, open global data available everywhere, or a deterministic
+offline layout is used when no internet connection is available. Using an
+illustrative synthetic dataset configured for Rondônia, Mato Grosso, Pará, across
+3 regions, 12 slaughterhouses, and the years 2013-2018, the
+workflow finds that the average direct supply zone of a signatory plant (a
+plant that has joined a public sourcing commitment) covers about
+1.5 million hectares, that roughly a quarter of that area
+is natural vegetation, and that extending monitoring to indirect suppliers or
+non-signatory plants would substantially widen coverage of the cattle trade
+at the cost of a much larger area to monitor. Every number below comes from
+fictitious data; the value of the exercise is the method, not the estimate.
 
 ## 1. Why supply zones matter
 
@@ -31,8 +35,9 @@ zone translates the plant's likely catchment area for cattle into an
 explicit polygon, so it can be overlaid with land use, deforestation, and
 protected-area data to ask questions such as: how much of a plant's likely
 sourcing area still has forest cover, and how does that compare between
-plants that have signed a public zero-deforestation commitment (the Cattle
-Agreement, or **CA**) and plants that have not.
+plants that have signed a public sourcing commitment (referred to here as
+"signatory" plants, after Brazil's Cattle Agreement, the case this workflow
+was originally built around) and plants that have not.
 
 The original study built these zones from confidential cattle-transit permits
 (GTA) and rural property registrations (CAR) using proprietary ArcGIS
@@ -44,9 +49,9 @@ what each result means for a non-specialist reader.
 
 ## 2. Study design in brief
 
-The workflow simulates six years of fictitious cattle-transit records, rural
+The workflow simulates 6 years of fictitious cattle-transit records, rural
 property boundaries, slaughterhouse locations, land use, and deforestation
-across three states. It then:
+across 3 regions. It then:
 
 1. Links each transit record to a property using deterministic matching rules.
 2. Classifies slaughterhouses as eligible when they process more than 1,000
@@ -71,25 +76,25 @@ across three states. It then:
 
 | Zone type | Zone-years observed | Mean annual area (million ha) | Median annual area (million ha) | Mean number of properties |
 | --- | --- | --- | --- | --- |
-| CA direct | 36 | 1.2 | 0.8 | 16.3 |
-| CA tier-1 indirect | 36 | 0.1 | 0.0 | 3.2 |
-| Non-CA direct | 36 | 1.0 | 1.0 | 17.6 |
-| Non-CA tier-1 indirect | 36 | 0.1 | 0.0 | 3.5 |
+| Signatory direct | 36 | 1.5 | 0.9 | 15.6 |
+| Signatory tier-1 indirect | 35 | 0.1 | 0.0 | 3.2 |
+| Non-signatory direct | 36 | 1.4 | 1.3 | 18.3 |
+| Non-signatory tier-1 indirect | 36 | 0.1 | 0.0 | 3.6 |
 
-CA-signatory plants have direct supply zones that are, on average, larger
-than their non-CA counterparts in this synthetic dataset, largely because
-CA-signatory plants tend to source from more properties. The zones are not
-mutually exclusive: a property can appear inside more than one plant's
+Signatory plants have direct supply zones that are, on average, larger
+than their non-signatory counterparts in this synthetic dataset, largely
+because signatory plants tend to source from more properties. The zones are
+not mutually exclusive: a property can appear inside more than one plant's
 catchment, and different zone types partly cover the same territory.
 
 | Zone type A | Zone type B | Share of A inside B (%) | Share of B inside A (%) | Overlap index, Jaccard (%) |
 | --- | --- | --- | --- | --- |
-| CA direct | CA tier-1 indirect | 12.0% | 57.8% | 11.0% |
-| CA direct | Non-CA direct | 42.3% | 43.3% | 27.2% |
-| CA direct | Non-CA tier-1 indirect | 13.2% | 80.7% | 12.8% |
-| CA tier-1 indirect | Non-CA direct | 72.4% | 15.4% | 14.5% |
-| CA tier-1 indirect | Non-CA tier-1 indirect | 36.5% | 46.4% | 25.7% |
-| Non-CA direct | Non-CA tier-1 indirect | 12.4% | 74.3% | 11.9% |
+| Signatory direct | Signatory tier-1 indirect | 9.2% | 64.2% | 8.8% |
+| Signatory direct | Non-signatory direct | 38.1% | 37.5% | 23.3% |
+| Signatory direct | Non-signatory tier-1 indirect | 12.0% | 82.2% | 11.7% |
+| Signatory tier-1 indirect | Non-signatory direct | 73.8% | 10.5% | 10.1% |
+| Signatory tier-1 indirect | Non-signatory tier-1 indirect | 35.5% | 35.1% | 21.4% |
+| Non-signatory direct | Non-signatory tier-1 indirect | 9.5% | 65.9% | 9.0% |
 
 ![Figure 2. Cumulative overlap of all four supply-zone types, 2013-2018.](../figures/figure_2_zone_overlap.png)
 
@@ -103,20 +108,21 @@ catchment, and different zone types partly cover the same territory.
 
 A property that supplies a plant only once is a weaker basis for monitoring
 than one that supplies it consistently. The workflow tracks, pixel by pixel,
-how many of the six years a location falls inside the CA-direct supply zone.
+how many of the 6 years a location falls inside the signatory direct
+supply zone.
 
 | Years covered out of 6 | Cumulative area (thousand ha) | Share of the ever-covered footprint (%) |
 | --- | --- | --- |
-| 1 | 1,090.0 | 9.1% |
-| 2 | 900.0 | 7.5% |
-| 3 | 3,090.0 | 25.8% |
-| 4 | 3,640.0 | 30.4% |
-| 5 | 2,460.0 | 20.6% |
-| 6 | 780.0 | 6.5% |
+| 1 | 2,150.0 | 14.2% |
+| 2 | 1,290.0 | 8.5% |
+| 3 | 3,680.0 | 24.3% |
+| 4 | 4,390.0 | 28.9% |
+| 5 | 2,620.0 | 17.3% |
+| 6 | 1,040.0 | 6.9% |
 
-![Figure 3. Number of years each location falls inside the CA-direct supply zone.](../figures/figure_3_persistence.png)
+![Figure 3. Number of years each location falls inside the signatory direct supply zone.](../figures/figure_3_persistence.png)
 
-*Figure 3. Number of years each location falls inside the CA-direct supply zone.*
+*Figure 3. Number of years each location falls inside the signatory direct supply zone.*
 
 ## 5. What land cover is inside each supply zone
 
@@ -129,18 +135,18 @@ are cross-tabulated against each zone type, after excluding officially
 protected and military areas from the denominator for the natural-vegetation
 figure so that it reflects land that is legally available for conversion.
 
-## 6. Deforestation and carbon inside the CA-direct zone
+## 6. Deforestation and carbon inside the signatory direct zone
 
 | Zone type | Deforestation, 2008-2018 (thousand ha) | Committed emissions, 2008-2018 (MtCO2e) |
 | --- | --- | --- |
-| CA direct | 6.4 | 2.9 |
-| CA tier-1 indirect | 0.7 | 0.2 |
-| Non-CA direct | 9.5 | 3.6 |
-| Non-CA tier-1 indirect | 1.5 | 0.4 |
+| Signatory direct | 5.7 | 0.5 |
+| Signatory tier-1 indirect | 0.3 | 0.0 |
+| Non-signatory direct | 5.1 | 0.8 |
+| Non-signatory tier-1 indirect | 1.1 | 0.1 |
 
-![Figure S2. Annual synthetic deforestation and committed carbon emissions inside the CA-direct zone, 2008-2018.](../figures/figure_s2_deforestation_carbon.png)
+![Figure S2. Annual synthetic deforestation and committed carbon emissions inside the signatory direct zone.](../figures/figure_s2_deforestation_carbon.png)
 
-*Figure S2. Annual synthetic deforestation and committed carbon emissions inside the CA-direct zone, 2008-2018.*
+*Figure S2. Annual synthetic deforestation and committed carbon emissions inside the signatory direct zone.*
 
 ## 7. How the supply-zone radius is chosen for each plant and year
 
@@ -154,39 +160,39 @@ around plants whose suppliers are scattered.
 
 *Figure 5. Correlogram of Moran's I against distance for four example slaughterhouses; the marked point is the distance actually used to build that plant-year's zone.*
 
-## 8. Where does the cattle that leaves a CA-linked property end up
+## 8. Where does the cattle that leaves a signatory property end up
 
-![Figure 7. Destination of cattle heads that leave CA-linked direct properties.](../figures/figure_7_supplier_flows.png)
+![Figure 7. Destination of cattle heads that leave signatory direct properties.](../figures/figure_7_supplier_flows.png)
 
-*Figure 7. Destination of cattle heads that leave CA-linked direct properties.*
+*Figure 7. Destination of cattle heads that leave signatory direct properties.*
 
-Only part of the cattle that leaves a CA-linked direct property is
-slaughtered at a CA-signatory plant; the remainder is either slaughtered
+Only part of the cattle that leaves a signatory direct property is
+slaughtered at a signatory plant; the remainder is either slaughtered
 elsewhere or moved to another property first, which is exactly the kind of
 leakage that indirect-supplier monitoring is designed to catch.
 
 ## 9. How far apart are direct suppliers, indirect suppliers, and rival plants
 
-![Figure 8. Distribution of two distance measures: tier-1 indirect supplier to nearest direct supplier, and CA-signatory plant to nearest non-CA plant.](../figures/figure_8_distance_distribution.png)
+![Figure 8. Distribution of two distance measures: tier-1 indirect supplier to nearest direct supplier, and signatory plant to nearest non-signatory plant.](../figures/figure_8_distance_distribution.png)
 
-*Figure 8. Distribution of two distance measures: tier-1 indirect supplier to nearest direct supplier, and CA-signatory plant to nearest non-CA plant.*
+*Figure 8. Distribution of two distance measures: tier-1 indirect supplier to nearest direct supplier, and signatory plant to nearest non-signatory plant.*
 
 ## 10. What would happen if monitoring were extended
 
 | Monitoring scenario | Zone area (million ha) | Properties covered | Slaughter volume covered (%) |
 | --- | --- | --- | --- |
-| Current (CA direct only) | 12.1 | 120 | 56.5% |
-| Add CA tier-1 indirect | 13.1 | 136 | 63.4% |
-| Add non-CA direct | 18.7 | 170 | 78.3% |
-| All direct and tier-1 suppliers | 19.3 | 170 | 78.3% |
+| Current (signatory direct only) | 15.1 | 117 | 55.1% |
+| Add signatory tier-1 indirect | 15.8 | 131 | 60.8% |
+| Add non-signatory direct | 24.6 | 170 | 78.3% |
+| All direct and tier-1 suppliers | 24.6 | 170 | 78.3% |
 
 ![Figure 6. Monitored area and slaughter-volume coverage under four expansion scenarios.](../figures/figure_6_expansion_pathways.png)
 
 *Figure 6. Monitored area and slaughter-volume coverage under four expansion scenarios.*
 
-Adding non-CA direct suppliers to the monitored footprint captures far more
-of the slaughter volume in this synthetic scenario than adding tier-1
-indirect suppliers of CA-linked plants does, but it also requires monitoring
+Adding non-signatory direct suppliers to the monitored footprint captures far
+more of the slaughter volume in this synthetic scenario than adding tier-1
+indirect suppliers of signatory plants does, but it also requires monitoring
 a substantially larger area, illustrating the coverage-versus-scope trade-off
 that any traceability system has to navigate.
 
@@ -194,9 +200,9 @@ that any traceability system has to navigate.
 
 | Method | Mean zone area (million ha) | Median overestimate vs. this workflow (%) |
 | --- | --- | --- |
-| Incremental spatial-autocorrelation (this workflow) | 1.1 | - |
-| Simple radial buffer around the plant | 11.7 | 1,064.9% |
-| Supplier convex-hull proxy | 6.1 | - |
+| Incremental spatial-autocorrelation (this workflow) | 1.4 | - |
+| Simple radial buffer around the plant | 14.0 | 949.9% |
+| Supplier convex-hull proxy | 7.0 | - |
 
 ![Figure 9. Zone area under the incremental spatial-autocorrelation method compared with two simpler distance-based proxies.](../figures/figure_9_alternative_methods.png)
 
@@ -212,11 +218,11 @@ percentage overestimates that would otherwise dominate the average. This is a
 methodological caution for anyone tempted to shortcut the distance-selection
 step to save computation time.
 
-## 12. Where the supply zone sits geographically, state by state
+## 12. Where the supply zone sits geographically, region by region
 
-![Figure 11. Share of each state's territory that falls inside the cumulative CA-direct supply zone.](../figures/figure_11_state_coverage_map.png)
+![Figure 11. Share of each region's territory that falls inside the cumulative signatory direct supply zone.](../figures/figure_11_state_coverage_map.png)
 
-*Figure 11. Share of each state's territory that falls inside the cumulative CA-direct supply zone.*
+*Figure 11. Share of each region's territory that falls inside the cumulative signatory direct supply zone.*
 
 ## 13. Limitations
 

@@ -130,9 +130,9 @@ def _table_deforestation(deforestation: pd.DataFrame) -> str:
 
 def _table_expansion(expansion: pd.DataFrame) -> str:
     labels = {
-        "current_CA_direct": "Current (CA direct only)",
-        "pathway_1_add_CA_tier1": "Add CA tier-1 indirect",
-        "pathway_2_add_non_CA_direct": "Add non-CA direct",
+        "current_CA_direct": "Current (signatory direct only)",
+        "pathway_1_add_CA_tier1": "Add signatory tier-1 indirect",
+        "pathway_2_add_non_CA_direct": "Add non-signatory direct",
         "pathway_3_all_direct_and_tier1": "All direct and tier-1 suppliers",
     }
     data = expansion.set_index("scenario").loc[list(labels)].reset_index()
@@ -190,17 +190,25 @@ def build_report(cfg: dict, zones: gpd.GeoDataFrame, results: dict) -> Path:
     expansion = results["expansion"]
     alternatives = results["alternatives"]
 
-    ca_direct_area = (
-        zones.loc[zones["zone_type"] == "CA_direct", "area_ha"].mean() / 1_000_000
-    )
     n_states = zones["state"].nunique()
     n_plants = zones["slaughterhouse_id"].nunique()
     years = f"{int(zones['year'].min())}-{int(zones['year'].max())}"
+    n_years = len(cfg["project"]["years"])
+    ca_direct_area = (
+        zones.loc[zones["zone_type"] == "CA_direct", "area_ha"].mean() / 1_000_000
+    )
+    try:
+        states_layer = gpd.read_file(paths["raw"] / "synthetic_inputs.gpkg", layer="states")
+        name_column = "state_name" if "state_name" in states_layer.columns else "state"
+        place_names = states_layer[name_column].map(lambda n: n.split(",")[0].strip()).tolist()
+    except Exception:
+        place_names = []
+    place_phrase = ", ".join(place_names) if place_names else f"{n_states} configured regions"
 
     sections = []
 
     sections.append(
-        f"""# Mapping Slaughterhouse Supply Zones: A Reproducible, Synthetic Walkthrough
+        f"""# Mapping Slaughterhouse Supply Zones: A Reproducible, Geographically Generic Walkthrough
 
 **A plain-language companion to Brandão Jr., Rausch, Munger & Gibbs (2023), *Land*, 12(9), 1782**
 
@@ -208,21 +216,25 @@ def build_report(cfg: dict, zones: gpd.GeoDataFrame, results: dict) -> Path:
 
 ## Executive summary
 
-Cattle raised in the Brazilian Amazon can travel through several properties
-before reaching a slaughterhouse, which makes it hard to know exactly where
-the animals a company buys actually came from. This report walks through a
-complete, open-source workflow that estimates the geographic area, or
-**supply zone**, that feeds each slaughterhouse, and separates that area into
-farms that sell cattle directly to the plant from farms that sell only
-through an intermediary. Using an illustrative synthetic dataset built for
-this repository, across {n_states} states, {n_plants} slaughterhouses, and the
-years {years}, the workflow finds that the average direct supply zone of a
-Cattle Agreement (CA) signatory covers about {_fmt_1(ca_direct_area)} million
-hectares, that roughly a quarter of that area is natural vegetation, and that
-extending monitoring to indirect suppliers or non-signatory plants would
-substantially widen coverage of the cattle trade at the cost of a much larger
-area to monitor. Every number below comes from fictitious data; the value of
-the exercise is the method, not the estimate."""
+Cattle can travel through several properties before reaching a slaughterhouse,
+which makes it hard to know exactly where the animals a company buys actually
+came from. This report walks through a complete, open-source, geographically
+generic workflow that estimates the area, or **supply zone**, that feeds each
+slaughterhouse, and separates that area into farms that sell cattle directly
+to the plant from farms that sell only through an intermediary. The workflow
+can be pointed at any region in the world by naming it in the project
+configuration; real administrative boundaries are then fetched from
+OpenStreetMap, open global data available everywhere, or a deterministic
+offline layout is used when no internet connection is available. Using an
+illustrative synthetic dataset configured for {place_phrase}, across
+{n_states} regions, {n_plants} slaughterhouses, and the years {years}, the
+workflow finds that the average direct supply zone of a signatory plant (a
+plant that has joined a public sourcing commitment) covers about
+{_fmt_1(ca_direct_area)} million hectares, that roughly a quarter of that area
+is natural vegetation, and that extending monitoring to indirect suppliers or
+non-signatory plants would substantially widen coverage of the cattle trade
+at the cost of a much larger area to monitor. Every number below comes from
+fictitious data; the value of the exercise is the method, not the estimate."""
     )
 
     sections.append(
@@ -235,8 +247,9 @@ zone translates the plant's likely catchment area for cattle into an
 explicit polygon, so it can be overlaid with land use, deforestation, and
 protected-area data to ask questions such as: how much of a plant's likely
 sourcing area still has forest cover, and how does that compare between
-plants that have signed a public zero-deforestation commitment (the Cattle
-Agreement, or **CA**) and plants that have not.
+plants that have signed a public sourcing commitment (referred to here as
+"signatory" plants, after Brazil's Cattle Agreement, the case this workflow
+was originally built around) and plants that have not.
 
 The original study built these zones from confidential cattle-transit permits
 (GTA) and rural property registrations (CAR) using proprietary ArcGIS
@@ -250,9 +263,9 @@ what each result means for a non-specialist reader."""
     sections.append(
         f"""## 2. Study design in brief
 
-The workflow simulates six years of fictitious cattle-transit records, rural
+The workflow simulates {n_years} years of fictitious cattle-transit records, rural
 property boundaries, slaughterhouse locations, land use, and deforestation
-across three states. It then:
+across {n_states} regions. It then:
 
 1. Links each transit record to a property using deterministic matching rules.
 2. Classifies slaughterhouses as eligible when they process more than 1,000
@@ -277,15 +290,15 @@ across three states. It then:
 
 {_table_zone_overview(zones)}
 
-CA-signatory plants have direct supply zones that are, on average, larger
-than their non-CA counterparts in this synthetic dataset, largely because
-CA-signatory plants tend to source from more properties. The zones are not
-mutually exclusive: a property can appear inside more than one plant's
+Signatory plants have direct supply zones that are, on average, larger
+than their non-signatory counterparts in this synthetic dataset, largely
+because signatory plants tend to source from more properties. The zones are
+not mutually exclusive: a property can appear inside more than one plant's
 catchment, and different zone types partly cover the same territory.
 
 {_table_overlap(overlap)}
 
-{_image(f'{figures_relative}/figure_2_zone_overlap.png', 'Figure 2. Cumulative overlap of all four supply-zone types, 2013-2018.')}
+{_image(f'{figures_relative}/figure_2_zone_overlap.png', f'Figure 2. Cumulative overlap of all four supply-zone types, {years}.')}
 
 {_image(f'{figures_relative}/figure_10_zone_overlap_heatmap.png', 'Figure 10. Pairwise spatial overlap between zone types, summarized as a Jaccard index.')}"""
     )
@@ -295,11 +308,12 @@ catchment, and different zone types partly cover the same territory.
 
 A property that supplies a plant only once is a weaker basis for monitoring
 than one that supplies it consistently. The workflow tracks, pixel by pixel,
-how many of the six years a location falls inside the CA-direct supply zone.
+how many of the {n_years} years a location falls inside the signatory direct
+supply zone.
 
 {_table_persistence(persistence)}
 
-{_image(f'{figures_relative}/figure_3_persistence.png', 'Figure 3. Number of years each location falls inside the CA-direct supply zone.')}"""
+{_image(f'{figures_relative}/figure_3_persistence.png', 'Figure 3. Number of years each location falls inside the signatory direct supply zone.')}"""
     )
 
     sections.append(
@@ -314,11 +328,11 @@ figure so that it reflects land that is legally available for conversion."""
     )
 
     sections.append(
-        f"""## 6. Deforestation and carbon inside the CA-direct zone
+        f"""## 6. Deforestation and carbon inside the signatory direct zone
 
 {_table_deforestation(deforestation)}
 
-{_image(f'{figures_relative}/figure_s2_deforestation_carbon.png', 'Figure S2. Annual synthetic deforestation and committed carbon emissions inside the CA-direct zone, 2008-2018.')}"""
+{_image(f'{figures_relative}/figure_s2_deforestation_carbon.png', 'Figure S2. Annual synthetic deforestation and committed carbon emissions inside the signatory direct zone.')}"""
     )
 
     sections.append(
@@ -334,12 +348,12 @@ around plants whose suppliers are scattered.
     )
 
     sections.append(
-        f"""## 8. Where does the cattle that leaves a CA-linked property end up
+        f"""## 8. Where does the cattle that leaves a signatory property end up
 
-{_image(f'{figures_relative}/figure_7_supplier_flows.png', 'Figure 7. Destination of cattle heads that leave CA-linked direct properties.')}
+{_image(f'{figures_relative}/figure_7_supplier_flows.png', 'Figure 7. Destination of cattle heads that leave signatory direct properties.')}
 
-Only part of the cattle that leaves a CA-linked direct property is
-slaughtered at a CA-signatory plant; the remainder is either slaughtered
+Only part of the cattle that leaves a signatory direct property is
+slaughtered at a signatory plant; the remainder is either slaughtered
 elsewhere or moved to another property first, which is exactly the kind of
 leakage that indirect-supplier monitoring is designed to catch."""
     )
@@ -347,7 +361,7 @@ leakage that indirect-supplier monitoring is designed to catch."""
     sections.append(
         f"""## 9. How far apart are direct suppliers, indirect suppliers, and rival plants
 
-{_image(f'{figures_relative}/figure_8_distance_distribution.png', 'Figure 8. Distribution of two distance measures: tier-1 indirect supplier to nearest direct supplier, and CA-signatory plant to nearest non-CA plant.')}"""
+{_image(f'{figures_relative}/figure_8_distance_distribution.png', 'Figure 8. Distribution of two distance measures: tier-1 indirect supplier to nearest direct supplier, and signatory plant to nearest non-signatory plant.')}"""
     )
 
     sections.append(
@@ -357,9 +371,9 @@ leakage that indirect-supplier monitoring is designed to catch."""
 
 {_image(f'{figures_relative}/figure_6_expansion_pathways.png', 'Figure 6. Monitored area and slaughter-volume coverage under four expansion scenarios.')}
 
-Adding non-CA direct suppliers to the monitored footprint captures far more
-of the slaughter volume in this synthetic scenario than adding tier-1
-indirect suppliers of CA-linked plants does, but it also requires monitoring
+Adding non-signatory direct suppliers to the monitored footprint captures far
+more of the slaughter volume in this synthetic scenario than adding tier-1
+indirect suppliers of signatory plants does, but it also requires monitoring
 a substantially larger area, illustrating the coverage-versus-scope trade-off
 that any traceability system has to navigate."""
     )
@@ -383,9 +397,9 @@ step to save computation time."""
     )
 
     sections.append(
-        f"""## 12. Where the supply zone sits geographically, state by state
+        f"""## 12. Where the supply zone sits geographically, region by region
 
-{_image(f'{figures_relative}/figure_11_state_coverage_map.png', "Figure 11. Share of each state's territory that falls inside the cumulative CA-direct supply zone.")}"""
+{_image(f'{figures_relative}/figure_11_state_coverage_map.png', "Figure 11. Share of each region's territory that falls inside the cumulative signatory direct supply zone.")}"""
     )
 
     sections.append(

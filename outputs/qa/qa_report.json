@@ -65,8 +65,8 @@
     {
       "check": "zone_geometries_valid",
       "status": "PASS",
-      "observed": 144,
-      "expected": "144 valid, non-empty zones"
+      "observed": 143,
+      "expected": "143 valid, non-empty zones"
     },
     {
       "check": "zone_area_recalculation",

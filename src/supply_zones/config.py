@@ -38,3 +38,19 @@ def ensure_directories(cfg: dict[str, Any]) -> dict[str, Path]:
             path.mkdir(parents=True, exist_ok=True)
     return paths
 
+
+def cumulative_scope_label(cfg: dict[str, Any]) -> str:
+    """The sentinel `temporal_scope` value for the all-years cumulative union.
+
+    Computed from the configured project years so the workflow generalizes to
+    any year range, rather than a range hardcoded to one historical example.
+    """
+    years = cfg["project"]["years"]
+    return f"{min(years)}_{max(years)}_union"
+
+
+def year_range_label(cfg: dict[str, Any]) -> str:
+    """A human-readable year range, e.g. '2013-2018', for titles and captions."""
+    years = cfg["project"]["years"]
+    return f"{min(years)}-{max(years)}"
+

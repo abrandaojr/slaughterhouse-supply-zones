@@ -20,12 +20,12 @@ Contains the GTA-side owner, establishment, municipality, state, and identifier 
 
 | Layer | Contents |
 |---|---|
-| `study_area` | Union of the three fictitious state regions |
-| `states` | Fictitious PA, MT, and RO polygons |
-| `biomes` | Simplified fictitious Amazon, Cerrado, and Pantanal partitions |
+| `study_area` | Union of the configured administrative units (three fictitious Brazilian states by default) |
+| `states` | Administrative unit polygons (`state` code, `state_name`, geometry); real OpenStreetMap boundaries when available, otherwise a deterministic offline fallback |
+| `biomes` | Simplified fictitious Amazon, Cerrado, and Pantanal partitions (labels and extents configurable in `config.yml`) |
 | `protected_areas` | Fictitious Conservation Unit and Indigenous Land polygons |
 | `military_areas` | Fictitious military polygon |
-| `slaughterhouses` | Plant location, inspection, and CA status |
+| `slaughterhouses` | Plant location, inspection, and signatory (CA) status |
 | `car_properties` | CAR-like property polygons and linkage attributes |
 | `deforestation` | PRODES-like polygons, year, biome, area, and carbon density |
 

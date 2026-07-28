@@ -8,13 +8,13 @@ It creates and analyzes **entirely fictitious data**. No confidential GTA, CAR, 
 
 ## What the workflow reproduces
 
-1. Synthetic GTA transactions, CAR-like property polygons, slaughterhouses, protected areas, land use, deforestation, and carbon-density data.
+1. Synthetic GTA transactions, CAR-like property polygons, slaughterhouses, protected areas, land use, deforestation, and carbon-density data, generated inside administrative units resolved either from real OpenStreetMap boundaries (any place in the world) or a deterministic offline fallback layout.
 2. Strict GTA–CAR record linkage with multiple deterministic rules.
 3. Selection of slaughterhouses with more than 1,000 slaughtered cattle per year and a sanitary inspection code.
 4. Identification of direct and tier-1 indirect suppliers in the same year, with the 16-head transaction threshold and property-level role hierarchy.
 5. Incremental spatial autocorrelation using cattle-volume-weighted Global Moran's I across increasing distance bands.
 6. Supply-zone construction using an open-source equivalent of polygon aggregation.
-7. Classification into CA direct, CA indirect, non-CA direct, and non-CA indirect zones.
+7. Classification into signatory direct, signatory tier-1 indirect, non-signatory direct, and non-signatory tier-1 indirect zones.
 8. Area, overlap, persistence, distance, land-use, deforestation, carbon-emission, supplier-role, and expansion-pathway analyses.
 9. Main and supplementary-style figures and machine-readable tables.
 10. Automated QA checks, provenance manifests, and tests.
@@ -64,6 +64,10 @@ or:
 docker build -t synthetic-supply-zones .
 docker run --rm -v "${PWD}/outputs:/app/outputs" synthetic-supply-zones
 ```
+
+## Geographic genericity
+
+The study area is not hardcoded to Brazil. `geography.place_queries` in `config/config.yml` names the regions to use, and can name *any* place recognized by OpenStreetMap, worldwide. With `geography.mode: osm` and the optional `osmnx` dependency (`pip install -e ".[osm]"`) plus network access, real administrative boundaries are fetched from OpenStreetMap and cached locally. Without network access, or with `geography.mode: synthetic`, a deterministic offline rectangular layout is used instead, so the pipeline always remains fully reproducible. Either way, no other part of the codebase is geography-specific.
 
 ## Important methodological note
 

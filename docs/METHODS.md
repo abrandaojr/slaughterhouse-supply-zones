@@ -2,13 +2,19 @@
 
 ## Scope and analytical unit
 
-The workflow reproduces the logic of Brandão et al. (2023) with fictitious records for three synthetic state-shaped regions labeled PA, MT, and RO. The observation period is 2013–2018. The main analytical unit is the slaughterhouse–year–supplier-type combination. Property-level flows are the unit used to identify direct and tier-1 indirect suppliers.
+The workflow reproduces the logic of Brandão et al. (2023). By default it is configured for three synthetic state-shaped regions labeled PA, MT, and RO (Pará, Mato Grosso, and Rondônia, Brazil), covering 2013–2018, matching the original study's setting. Neither the geography nor the observation period is hardcoded, however: any region in the world and any year range can be substituted through `config/config.yml` (see "Geographic genericity" below). The main analytical unit is the slaughterhouse–year–supplier-type combination. Property-level flows are the unit used to identify direct and tier-1 indirect suppliers.
 
-All spatial calculations use the projected equal-area CRS EPSG:5880. The synthetic rasters use 10 km cells to keep the repository compact. This resolution is appropriate only for the demonstration data and must not be carried into empirical applications without reassessment.
+All spatial calculations use a projected, equal-area-appropriate CRS: an automatically estimated local UTM zone when real OpenStreetMap boundaries are fetched, or the configured `fallback_crs` (EPSG:5880 by default) otherwise. The synthetic rasters use 10 km cells to keep the repository compact. This resolution is appropriate only for the demonstration data and must not be carried into empirical applications without reassessment.
+
+## Geographic genericity
+
+`src/supply_zones/osm.py` resolves the study area's administrative units (the workflow's generic term for what the source study calls "states") from `geography.place_queries` in the configuration, which can name any place recognized by OpenStreetMap's Nominatim geocoder, worldwide. When `geography.mode` is `osm` and the optional `osmnx` dependency plus network access are available, real boundaries are fetched, cached to `data/raw/osm_cache/` as GeoJSON, and an appropriate local metric CRS is estimated automatically. When OSM cannot be reached, the workflow falls back to a deterministic, offline rectangular layout sized for any number of configured units, so the pipeline remains fully reproducible without an internet connection. Property and slaughterhouse placement uses rejection sampling to guarantee valid, non-empty geometry inside the resolved administrative polygon regardless of its shape (rectangular or a real, irregular coastline/border).
+
+Throughout the code, "CA" (Brazil's Cattle Agreement, the zero-deforestation sourcing commitment the source study examined) is retained as the internal data label for backward compatibility with the source study, but is presented to readers as "signatory" / "non-signatory" in figures, tables, and the plain-language report, since a public sourcing commitment of this kind is not unique to Brazil.
 
 ## Transformation graph
 
-1. `synthetic.py` creates GTA-like movements, GTA establishment attributes, CAR-like property polygons, slaughterhouses, agreement status, biomes, protected areas, military areas, land use, deforestation, and biomass carbon density.
+1. `osm.py` resolves the study area's administrative units from OpenStreetMap or a deterministic offline fallback (see "Geographic genericity" above). `synthetic.py` then creates GTA-like movements, GTA establishment attributes, CAR-like property polygons, slaughterhouses, agreement status, biomes, protected areas, military areas, land use, deforestation, and biomass carbon density within those units.
 2. `matching.py` standardizes text and identifiers, then applies strict, ordered GTA–CAR matching rules. A record is linked only when a rule identifies one unique CAR candidate.
 3. `network.py` filters movements below 16 heads, selects inspected slaughterhouses with mean annual slaughter above 1,000 heads, identifies direct suppliers, and traces tier-1 non-slaughter movements into direct suppliers in the same year.
 4. A property that has both roles in the same year is classified at its highest supply-chain role, direct supplier.
@@ -16,7 +22,7 @@ All spatial calculations use the projected equal-area CRS EPSG:5880. The synthet
 6. Supplier polygons are buffered by half the selected distance, dissolved, and contracted by the same amount. Components are ranked by their included cattle volume and retained until they contain 95% of the group’s cattle. The result is clipped to the synthetic study area and topology-preserving simplification is applied.
 7. Annual zones are classified as CA direct, CA tier-1 indirect, non-CA direct, or non-CA tier-1 indirect.
 8. `characterize.py` calculates annual and cumulative areas, pairwise overlap, six-year persistence, land use, filtered deforestation, committed carbon emissions, nearest-neighbor distances, supplier flows, agreement-expansion pathways, and alternative-zone comparisons.
-9. `figures.py` creates three main-figure analogues and three supplementary-figure analogues.
+9. `figures.py` and `report_charts.py` create three main-figure analogues, three supplementary-figure analogues, and eight additional report-oriented figures and maps. `report.py` assembles all of these, plus every table, into a single plain-language Markdown report.
 10. `qa.py` checks keys, linkage truth, CRS, geometry validity, thresholds, areas, raster classes, temporal coverage, and output completeness.
 
 ## Explicit operational decisions
@@ -44,4 +50,4 @@ The result is expressed in MtCO₂e.
 
 ## Interpretation
 
-Outputs demonstrate reproducibility of the method, not empirical evidence about Brazil. State abbreviations and article terminology are retained only to make the analytical correspondence easy to inspect.
+Outputs demonstrate reproducibility of the method, not empirical evidence about Brazil or any other configured region. Regional codes and article terminology are retained only to make the analytical correspondence to the source study easy to inspect; the underlying method works identically for any place named in `geography.place_queries`.

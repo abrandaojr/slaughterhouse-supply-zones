@@ -12,7 +12,7 @@ import rasterio
 from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib.patches import Patch
 
-from supply_zones.config import ensure_directories
+from supply_zones.config import cumulative_scope_label, ensure_directories
 
 
 COLORS = {
@@ -45,8 +45,10 @@ def figure_study_area(cfg: dict) -> None:
     )
     for row in states.itertuples(index=False):
         point = row.geometry.representative_point()
-        ax.text(point.x, point.y, row.state, weight="bold", ha="center", fontsize=10)
-    ax.set_title("Figure 1. Synthetic study area and linked GTA–CAR properties", loc="left")
+        full_label = getattr(row, "state_name", None) or row.state
+        label = full_label.split(",")[0].strip()
+        ax.text(point.x, point.y, label, weight="bold", ha="center", fontsize=10)
+    ax.set_title("Figure 1. Synthetic study area and linked property records", loc="left")
     ax.set_axis_off()
     ax.legend(frameon=False, loc="lower right")
     ax.text(
@@ -63,7 +65,7 @@ def figure_study_area(cfg: dict) -> None:
 def figure_zone_overlap(cfg: dict, cumulative: gpd.GeoDataFrame) -> None:
     paths = ensure_directories(cfg)
     study = gpd.read_file(paths["raw"] / "synthetic_inputs.gpkg", layer="states")
-    all_period = cumulative[cumulative["temporal_scope"] == "2013_2018_union"]
+    all_period = cumulative[cumulative["temporal_scope"] == cumulative_scope_label(cfg)]
     fig, ax = plt.subplots(figsize=(8, 7))
     study.plot(ax=ax, color="#F7F7F7", edgecolor="#666666", linewidth=0.8)
     for zone_type in [
@@ -98,7 +100,7 @@ def figure_persistence(cfg: dict) -> None:
     states.boundary.plot(ax=ax, color="#333333", linewidth=0.8)
     colorbar = fig.colorbar(image, ax=ax, shrink=0.72, ticks=range(1, 7))
     colorbar.set_label("Number of years covered")
-    ax.set_title("Figure 3. Persistence of synthetic CA direct supply zones", loc="left")
+    ax.set_title("Figure 3. Persistence of synthetic signatory direct supply zones", loc="left")
     ax.set_axis_off()
     _finish(fig, paths["figures"] / "figure_3_persistence.png")
 

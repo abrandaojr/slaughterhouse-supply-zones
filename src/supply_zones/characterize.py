@@ -9,7 +9,7 @@ import rasterio
 from rasterio.features import geometry_mask, rasterize
 from shapely.ops import unary_union
 
-from supply_zones.config import ensure_directories
+from supply_zones.config import cumulative_scope_label, ensure_directories
 
 
 def _union(frame: gpd.GeoDataFrame):
@@ -33,7 +33,7 @@ def build_cumulative_zones(cfg: dict, zones: gpd.GeoDataFrame) -> gpd.GeoDataFra
             {
                 "zone_type": zone_type,
                 "year": 0,
-                "temporal_scope": "2013_2018_union",
+                "temporal_scope": cumulative_scope_label(cfg),
                 "geometry": _union(group),
             }
         )
@@ -64,7 +64,7 @@ def summarize_zone_areas(cfg: dict, zones: gpd.GeoDataFrame, cumulative: gpd.Geo
         paths["tables"] / "cumulative_zone_area.csv", index=False
     )
 
-    all_period = cumulative[cumulative["temporal_scope"] == "2013_2018_union"].set_index(
+    all_period = cumulative[cumulative["temporal_scope"] == cumulative_scope_label(cfg)].set_index(
         "zone_type"
     )
     overlap_rows = []
@@ -170,7 +170,7 @@ def analyze_land_use(cfg: dict, cumulative: gpd.GeoDataFrame) -> pd.DataFrame:
     protected = gpd.read_file(paths["raw"] / "synthetic_inputs.gpkg", layer="protected_areas")
     military = gpd.read_file(paths["raw"] / "synthetic_inputs.gpkg", layer="military_areas")
     exclusions = unary_union(pd.concat([protected, military]).geometry)
-    all_period = cumulative[cumulative["temporal_scope"] == "2013_2018_union"]
+    all_period = cumulative[cumulative["temporal_scope"] == cumulative_scope_label(cfg)]
     class_names = {int(key): value for key, value in cfg["land_use"]["classes"].items()}
     rows = []
     with rasterio.open(paths["raw"] / "land_use_2018.tif") as src:
@@ -240,7 +240,7 @@ def analyze_deforestation_carbon(cfg: dict, cumulative: gpd.GeoDataFrame) -> pd.
     deforestation = gpd.read_file(
         paths["raw"] / "synthetic_inputs.gpkg", layer="deforestation"
     )
-    minimum = {
+    minimum = cfg["deforestation"].get("minimum_mapping_unit_ha_by_biome") or {
         "Amazon": cfg["deforestation"]["amazon_minimum_mapping_unit_ha"],
         "Cerrado": cfg["deforestation"]["cerrado_minimum_mapping_unit_ha"],
     }
@@ -253,7 +253,7 @@ def analyze_deforestation_carbon(cfg: dict, cumulative: gpd.GeoDataFrame) -> pd.
         )
     ]
     rows = []
-    all_period = cumulative[cumulative["temporal_scope"] == "2013_2018_union"]
+    all_period = cumulative[cumulative["temporal_scope"] == cumulative_scope_label(cfg)]
     with rasterio.open(paths["raw"] / "biomass_carbon_2018.tif") as biomass_src:
         biomass = biomass_src.read(1)
         valid_biomass = biomass != biomass_src.nodata
@@ -359,7 +359,7 @@ def analyze_supplier_flows_and_expansion(
     tx = pd.read_csv(paths["raw"] / "gta_transactions.csv")
     plants = gpd.read_file(paths["raw"] / "synthetic_inputs.gpkg", layer="slaughterhouses")
     plant_ca = plants.set_index("slaughterhouse_id")["ca_signatory"].to_dict()
-    all_period = cumulative[cumulative["temporal_scope"] == "2013_2018_union"].set_index(
+    all_period = cumulative[cumulative["temporal_scope"] == cumulative_scope_label(cfg)].set_index(
         "zone_type"
     )
     baseline_zone = all_period.loc["CA_direct"].geometry

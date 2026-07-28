@@ -5,6 +5,24 @@ project:
   crs: EPSG:5880
   analysis_note: All entities and measurements are fictitious.
 
+geography:
+  # Makes the study area generic and worldwide: any place name resolvable by
+  # OpenStreetMap's Nominatim geocoder can be used here, not only Brazilian
+  # states. mode "osm" fetches real administrative boundaries (requires the
+  # optional `osmnx` dependency and network access); mode "synthetic" always
+  # uses the deterministic offline rectangular fallback below, useful for
+  # fully offline or sandboxed runs.
+  mode: osm
+  place_queries:
+    - "Rondônia, Brazil"
+    - "Mato Grosso, Brazil"
+    - "Pará, Brazil"
+  unit_codes: [RO, MT, PA]
+  cache_dir: data/raw/osm_cache
+  fallback_crs: EPSG:5880
+  fallback_unit_width_m: 700000
+  fallback_unit_height_m: 700000
+
 synthetic:
   properties_per_state: 72
   slaughterhouses_per_state: 4
@@ -39,6 +57,9 @@ land_use:
 deforestation:
   amazon_minimum_mapping_unit_ha: 6.25
   cerrado_minimum_mapping_unit_ha: 1.0
+  minimum_mapping_unit_ha_by_biome:
+    Amazon: 6.25
+    Cerrado: 1.0
   exclude_biomes: [Pantanal]
   carbon_to_co2: 3.6666666667
 

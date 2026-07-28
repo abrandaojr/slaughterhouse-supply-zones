@@ -14,13 +14,7 @@ from shapely.geometry import Point, box
 from shapely.ops import unary_union
 
 from supply_zones.config import ensure_directories
-
-
-STATE_LAYOUT = {
-    "RO": (0, 0, 320_000, 420_000),
-    "MT": (320_000, 0, 920_000, 520_000),
-    "PA": (240_000, 520_000, 920_000, 980_000),
-}
+from supply_zones.osm import resolve_admin_units
 
 
 def _ascii(value: str) -> str:
@@ -33,6 +27,26 @@ def _ascii(value: str) -> str:
 
 def _square(x: float, y: float, half_size: float):
     return box(x - half_size, y - half_size, x + half_size, y + half_size)
+
+
+def _sample_point_in_polygon(rng, cx, cy, jitter, polygon, bounds, margin, max_tries=30):
+    """Sample a point near (cx, cy) that is guaranteed to fall inside ``polygon``.
+
+    Real administrative boundaries fetched from OpenStreetMap are frequently
+    concave or irregular, unlike the old fixed rectangles, so a plain
+    clip-to-bounding-box draw can land outside the actual shape. This retries
+    with jitter and falls back to the polygon's own representative point,
+    which is always inside it, so placement never fails regardless of the
+    geometry's shape or origin (OpenStreetMap or the offline fallback).
+    """
+    minx, miny, maxx, maxy = bounds
+    for _ in range(max_tries):
+        x = float(np.clip(cx + rng.normal(0, jitter), minx + margin, maxx - margin))
+        y = float(np.clip(cy + rng.normal(0, jitter), miny + margin, maxy - margin))
+        if polygon.contains(Point(x, y)):
+            return x, y
+    anchor = polygon.representative_point()
+    return anchor.x + rng.normal(0, jitter / 10), anchor.y + rng.normal(0, jitter / 10)
 
 
 def _write_layer(gdf: gpd.GeoDataFrame, path: Path, layer: str, first: bool = False) -> None:
@@ -72,26 +86,56 @@ def generate_synthetic_data(cfg: dict) -> dict[str, Path]:
     paths = ensure_directories(cfg)
     raw = paths["raw"]
     rng = np.random.default_rng(cfg["project"]["seed"])
-    crs = cfg["project"]["crs"]
+
+    admin_units, crs = resolve_admin_units(cfg)
+    cfg["project"]["crs"] = crs
+    STATE_LAYOUT = {
+        row.state: row.geometry.bounds for row in admin_units.itertuples(index=False)
+    }
+    ADMIN_POLYGON = {
+        row.state: row.geometry for row in admin_units.itertuples(index=False)
+    }
     years = cfg["project"]["years"]
     n_properties = cfg["synthetic"]["properties_per_state"]
     n_plants = cfg["synthetic"]["slaughterhouses_per_state"]
 
-    states = gpd.GeoDataFrame(
-        [{"state": state, "geometry": box(*bounds)} for state, bounds in STATE_LAYOUT.items()],
-        crs=crs,
-    )
+    states = admin_units[[col for col in ["state", "state_name", "geometry"] if col in admin_units.columns]].copy()
+    if "state_name" not in states.columns:
+        states["state_name"] = states["state"]
     study_geom = unary_union(states.geometry)
     study_area = gpd.GeoDataFrame(
         [{"study_id": "SYNTHETIC_STUDY_AREA", "geometry": study_geom}], crs=crs
     )
 
-    # Biomes are intentionally simplified fictitious partitions.
+    # Biomes are intentionally simplified fictitious partitions, defined as
+    # fractions of the overall study-area extent so the layout works for any
+    # geography, not just the specific coordinates of one country's states.
+    biome_labels = cfg["deforestation"].get("biome_labels", ["Amazon", "Cerrado", "Pantanal"])
+    biome_fractions = cfg["deforestation"].get(
+        "biome_extent_fractions",
+        {
+            "Amazon": (0.0, 0.33, 1.0, 1.0),
+            "Cerrado": (0.18, 0.0, 1.0, 0.42),
+            "Pantanal": (0.0, 0.0, 0.30, 0.21),
+        },
+    )
+    study_minx, study_miny, study_maxx, study_maxy = study_geom.bounds
+    study_width, study_height = study_maxx - study_minx, study_maxy - study_miny
     biomes = gpd.GeoDataFrame(
         [
-            {"biome": "Amazon", "geometry": study_geom.intersection(box(0, 360_000, 1_000_000, 1_100_000))},
-            {"biome": "Cerrado", "geometry": study_geom.intersection(box(180_000, 0, 1_000_000, 460_000))},
-            {"biome": "Pantanal", "geometry": study_geom.intersection(box(0, 0, 300_000, 230_000))},
+            {
+                "biome": label,
+                "geometry": study_geom.intersection(
+                    box(
+                        study_minx + biome_fractions[label][0] * study_width,
+                        study_miny + biome_fractions[label][1] * study_height,
+                        study_minx + biome_fractions[label][2] * study_width,
+                        study_miny + biome_fractions[label][3] * study_height,
+                    )
+                ),
+            }
+            for label in biome_labels
+            if label in biome_fractions
         ],
         crs=crs,
     )
@@ -109,10 +153,11 @@ def generate_synthetic_data(cfg: dict) -> dict[str, Path]:
             # CA and non-CA plants occur in nearby pairs, creating the
             # competition and overlapping procurement geography examined in
             # the paper.
-            x = minx + x_fractions[index] * (maxx - minx)
-            y = miny + y_fractions[index] * (maxy - miny)
-            x += rng.normal(0, 12_000)
-            y += rng.normal(0, 12_000)
+            raw_x = minx + x_fractions[index] * (maxx - minx)
+            raw_y = miny + y_fractions[index] * (maxy - miny)
+            x, y = _sample_point_in_polygon(
+                rng, raw_x, raw_y, 12_000, ADMIN_POLYGON[state], bounds, margin=1_000
+            )
             centers.append((x, y))
             plant_id = f"SH_{state}_{index + 1:02d}"
             inspection = inspection_pattern[index % len(inspection_pattern)]
@@ -142,8 +187,9 @@ def generate_synthetic_data(cfg: dict) -> dict[str, Path]:
         for index in range(n_properties):
             cluster = index % n_plants
             cx, cy = plant_centers[state][cluster]
-            x = np.clip(cx + rng.normal(0, 70_000), minx + 8_000, maxx - 8_000)
-            y = np.clip(cy + rng.normal(0, 70_000), miny + 8_000, maxy - 8_000)
+            x, y = _sample_point_in_polygon(
+                rng, cx, cy, 70_000, ADMIN_POLYGON[state], bounds, margin=8_000
+            )
             half_size = float(rng.uniform(1_800, 5_500))
             car_id = f"CAR_{state}_{index + 1:04d}"
             gta_id = f"GTA_{state}_{index + 1:04d}"
@@ -159,7 +205,7 @@ def generate_synthetic_data(cfg: dict) -> dict[str, Path]:
                     "owner_name": owner_name,
                     "property_name": property_name,
                     "municipality": municipality,
-                    "geometry": _square(x, y, half_size).intersection(box(*bounds)),
+                    "geometry": _square(x, y, half_size).intersection(ADMIN_POLYGON[state]),
                 }
             )
 
@@ -298,17 +344,18 @@ def generate_synthetic_data(cfg: dict) -> dict[str, Path]:
                     tx_counter += 1
     gta = pd.DataFrame(transactions)
 
+    codes = list(STATE_LAYOUT)
     protected = gpd.GeoDataFrame(
         [
             {
                 "protected_id": f"PA_{state}",
-                "type": "Conservation Unit" if state != "RO" else "Indigenous Land",
+                "type": "Conservation Unit" if state != codes[0] else "Indigenous Land",
                 "geometry": box(
                     bounds[0] + 0.04 * (bounds[2] - bounds[0]),
                     bounds[1] + 0.68 * (bounds[3] - bounds[1]),
                     bounds[0] + 0.25 * (bounds[2] - bounds[0]),
                     bounds[1] + 0.94 * (bounds[3] - bounds[1]),
-                ),
+                ).intersection(ADMIN_POLYGON[state]),
             }
             for state, bounds in STATE_LAYOUT.items()
         ],
@@ -318,7 +365,12 @@ def generate_synthetic_data(cfg: dict) -> dict[str, Path]:
         [
             {
                 "military_id": "MIL_SYNTH_01",
-                "geometry": box(770_000, 760_000, 860_000, 850_000).intersection(study_geom),
+                "geometry": box(
+                    study_minx + 0.79 * study_width,
+                    study_miny + 0.77 * study_height,
+                    study_minx + 0.88 * study_width,
+                    study_miny + 0.87 * study_height,
+                ).intersection(study_geom),
             }
         ],
         crs=crs,
@@ -326,7 +378,7 @@ def generate_synthetic_data(cfg: dict) -> dict[str, Path]:
 
     deforestation_rows: list[dict] = []
     for index in range(130):
-        state = list(STATE_LAYOUT)[index % 3]
+        state = codes[index % len(codes)]
         bounds = STATE_LAYOUT[state]
         x = rng.uniform(bounds[0] + 5_000, bounds[2] - 5_000)
         y = rng.uniform(bounds[1] + 5_000, bounds[3] - 5_000)
@@ -334,7 +386,7 @@ def generate_synthetic_data(cfg: dict) -> dict[str, Path]:
         radius = float(rng.uniform(300, 2_000))
         geom = Point(x, y).buffer(radius)
         biome_hit = biomes[biomes.geometry.intersects(Point(x, y))]
-        biome = biome_hit.iloc[0]["biome"] if not biome_hit.empty else "Amazon"
+        biome = biome_hit.iloc[0]["biome"] if not biome_hit.empty else biome_labels[0]
         deforestation_rows.append(
             {
                 "deforestation_id": f"DEF_{index + 1:04d}",

@@ -4,25 +4,25 @@
     {
       "check": "linked_property_key_unique",
       "status": "PASS",
-      "observed": 170,
-      "expected": "170 unique GTA property identifiers"
+      "observed": 168,
+      "expected": "168 unique GTA property identifiers"
     },
     {
       "check": "linked_geometries_valid",
       "status": "PASS",
-      "observed": 170,
-      "expected": "170 valid, non-empty geometries"
+      "observed": 168,
+      "expected": "168 valid, non-empty geometries"
     },
     {
       "check": "projected_equal_area_crs",
       "status": "PASS",
-      "observed": "EPSG:5880",
-      "expected": "projected CRS EPSG:5880"
+      "observed": "EPSG:32721",
+      "expected": "projected CRS EPSG:32721"
     },
     {
       "check": "matching_rate_plausible",
       "status": "PASS",
-      "observed": 0.787,
+      "observed": 0.7778,
       "expected": "0.70\u20130.95"
     },
     {
@@ -34,8 +34,8 @@
     {
       "check": "expected_links_recovered",
       "status": "PASS",
-      "observed": 170,
-      "expected": "170"
+      "observed": 168,
+      "expected": "168"
     },
     {
       "check": "supplier_years_complete",
@@ -65,8 +65,8 @@
     {
       "check": "zone_geometries_valid",
       "status": "PASS",
-      "observed": 143,
-      "expected": "143 valid, non-empty zones"
+      "observed": 144,
+      "expected": "144 valid, non-empty zones"
     },
     {
       "check": "zone_area_recalculation",

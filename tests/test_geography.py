@@ -39,20 +39,57 @@ def test_resolve_admin_units_uses_osm_when_available(tmp_path, monkeypatch):
     }
     monkeypatch.setitem(sys.modules, "osmnx", _fake_osmnx_module(polygons))
 
-    gdf, crs, used_real_osm = osm_module.resolve_admin_units(cfg)
+    gdf, crs, source = osm_module.resolve_admin_units(cfg)
 
     assert set(gdf["state"]) == {"TA", "TB"}
-    assert used_real_osm is True
+    assert source == "openstreetmap"
     assert gdf.crs is not None and not gdf.crs.is_geographic
     cache_dir = tmp_path / "data" / "raw" / "osm_cache"
     assert (cache_dir / "testland_a.geojson").exists()
     assert (cache_dir / "testland_b.geojson").exists()
 
 
-def test_resolve_admin_units_falls_back_without_osmnx(tmp_path, monkeypatch):
-    """If osmnx cannot be imported (or OSM cannot be reached), the workflow
-    must still produce a usable, deterministic set of admin units offline,
-    for any number of configured places."""
+def test_resolve_admin_units_uses_real_natural_earth_data(tmp_path, monkeypatch):
+    """With osmnx unavailable, real place names should resolve through the
+    public-domain Natural Earth dataset (a genuine network fetch to GitHub,
+    not mocked), producing real, non-rectangular coordinates."""
+    cfg = load_config()
+    cfg["_root"] = str(tmp_path)
+    cfg["geography"] = {
+        "mode": "osm",
+        "place_queries": ["Rondônia, Brazil", "Mato Grosso, Brazil", "Pará, Brazil"],
+        "unit_codes": ["RO", "MT", "PA"],
+        "cache_dir": "data/raw/osm_cache",
+    }
+    real_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == "osmnx":
+            raise ImportError("osmnx not installed in this environment")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+
+    gdf, crs, source = osm_module.resolve_admin_units(cfg)
+
+    assert source == "natural_earth"
+    assert set(gdf["state"]) == {"RO", "MT", "PA"}
+    assert gdf.crs is not None and not gdf.crs.is_geographic
+    # Real admin-1 polygons are irregular, unlike the offline rectangle
+    # fallback: none of the fetched shapes should be an exact 4-corner box.
+    for geometry in gdf.geometry:
+        exterior_coords = (
+            geometry.exterior.coords
+            if geometry.geom_type == "Polygon"
+            else max(geometry.geoms, key=lambda part: part.area).exterior.coords
+        )
+        assert len(exterior_coords) > 5
+
+
+def test_resolve_admin_units_falls_back_when_no_source_matches(tmp_path, monkeypatch):
+    """If osmnx cannot be imported and the place names match nothing in
+    Natural Earth either, the workflow must still produce a usable,
+    deterministic set of admin units offline, for any number of places."""
     cfg = load_config()
     cfg["_root"] = str(tmp_path)
     cfg["geography"] = {
@@ -70,10 +107,10 @@ def test_resolve_admin_units_falls_back_without_osmnx(tmp_path, monkeypatch):
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
 
-    gdf, crs, used_real_osm = osm_module.resolve_admin_units(cfg)
+    gdf, crs, source = osm_module.resolve_admin_units(cfg)
 
     assert set(gdf["state"]) == {"NA", "NB", "NC"}
-    assert used_real_osm is False
+    assert source == "synthetic_fallback"
     assert len(gdf) == 3
     assert gdf.crs is not None
 
@@ -87,9 +124,9 @@ def test_resolve_admin_units_synthetic_mode_skips_osm_entirely(tmp_path):
         "place_queries": ["Anywhere, Anycountry"],
         "unit_codes": ["A1"],
     }
-    gdf, crs, used_real_osm = osm_module.resolve_admin_units(cfg)
+    gdf, crs, source = osm_module.resolve_admin_units(cfg)
     assert list(gdf["state"]) == ["A1"]
-    assert used_real_osm is False
+    assert source == "synthetic_fallback"
 
 
 def test_fallback_layout_handles_arbitrary_unit_counts():

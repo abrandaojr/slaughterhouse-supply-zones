@@ -224,8 +224,9 @@ slaughterhouse, and separates that area into farms that sell cattle directly
 to the plant from farms that sell only through an intermediary. The workflow
 can be pointed at any region in the world by naming it in the project
 configuration; real administrative boundaries are then fetched from
-OpenStreetMap, open global data available everywhere, or a deterministic
-offline layout is used when no internet connection is available. Using an
+OpenStreetMap or the public-domain Natural Earth dataset, both open and
+globally available, or a deterministic offline layout is used when neither
+can be reached. Using an
 illustrative synthetic dataset configured for {place_phrase}, across
 {n_states} regions, {n_plants} slaughterhouses, and the years {years}, the
 workflow finds that the average direct supply zone of a signatory plant (a

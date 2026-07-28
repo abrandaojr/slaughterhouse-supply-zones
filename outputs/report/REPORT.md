@@ -14,13 +14,14 @@ slaughterhouse, and separates that area into farms that sell cattle directly
 to the plant from farms that sell only through an intermediary. The workflow
 can be pointed at any region in the world by naming it in the project
 configuration; real administrative boundaries are then fetched from
-OpenStreetMap, open global data available everywhere, or a deterministic
-offline layout is used when no internet connection is available. Using an
+OpenStreetMap or the public-domain Natural Earth dataset, both open and
+globally available, or a deterministic offline layout is used when neither
+can be reached. Using an
 illustrative synthetic dataset configured for Rondônia, Mato Grosso, Pará, across
 3 regions, 12 slaughterhouses, and the years 2013-2018, the
 workflow finds that the average direct supply zone of a signatory plant (a
 plant that has joined a public sourcing commitment) covers about
-1.5 million hectares, that roughly a quarter of that area
+1.9 million hectares, that roughly a quarter of that area
 is natural vegetation, and that extending monitoring to indirect suppliers or
 non-signatory plants would substantially widen coverage of the cattle trade
 at the cost of a much larger area to monitor. Every number below comes from
@@ -76,9 +77,9 @@ across 3 regions. It then:
 
 | Zone type | Zone-years observed | Mean annual area (million ha) | Median annual area (million ha) | Mean number of properties |
 | --- | --- | --- | --- | --- |
-| Signatory direct | 36 | 1.5 | 0.9 | 15.6 |
-| Signatory tier-1 indirect | 35 | 0.1 | 0.0 | 3.2 |
-| Non-signatory direct | 36 | 1.4 | 1.3 | 18.3 |
+| Signatory direct | 36 | 1.9 | 0.9 | 15.2 |
+| Signatory tier-1 indirect | 36 | 0.1 | 0.0 | 2.9 |
+| Non-signatory direct | 36 | 1.5 | 1.3 | 18.0 |
 | Non-signatory tier-1 indirect | 36 | 0.1 | 0.0 | 3.6 |
 
 Signatory plants have direct supply zones that are, on average, larger
@@ -89,12 +90,12 @@ catchment, and different zone types partly cover the same territory.
 
 | Zone type A | Zone type B | Share of A inside B (%) | Share of B inside A (%) | Overlap index, Jaccard (%) |
 | --- | --- | --- | --- | --- |
-| Signatory direct | Signatory tier-1 indirect | 9.2% | 64.2% | 8.8% |
-| Signatory direct | Non-signatory direct | 38.1% | 37.5% | 23.3% |
-| Signatory direct | Non-signatory tier-1 indirect | 12.0% | 82.2% | 11.7% |
-| Signatory tier-1 indirect | Non-signatory direct | 73.8% | 10.5% | 10.1% |
-| Signatory tier-1 indirect | Non-signatory tier-1 indirect | 35.5% | 35.1% | 21.4% |
-| Non-signatory direct | Non-signatory tier-1 indirect | 9.5% | 65.9% | 9.0% |
+| Signatory direct | Signatory tier-1 indirect | 5.6% | 65.2% | 5.4% |
+| Signatory direct | Non-signatory direct | 54.3% | 50.7% | 35.6% |
+| Signatory direct | Non-signatory tier-1 indirect | 8.1% | 58.6% | 7.6% |
+| Signatory tier-1 indirect | Non-signatory direct | 70.1% | 5.6% | 5.5% |
+| Signatory tier-1 indirect | Non-signatory tier-1 indirect | 45.9% | 28.5% | 21.3% |
+| Non-signatory direct | Non-signatory tier-1 indirect | 11.7% | 90.9% | 11.6% |
 
 ![Figure 2. Cumulative overlap of all four supply-zone types, 2013-2018.](../figures/figure_2_zone_overlap.png)
 
@@ -113,12 +114,12 @@ supply zone.
 
 | Years covered out of 6 | Cumulative area (thousand ha) | Share of the ever-covered footprint (%) |
 | --- | --- | --- |
-| 1 | 2,150.0 | 14.2% |
-| 2 | 1,290.0 | 8.5% |
-| 3 | 3,680.0 | 24.3% |
-| 4 | 4,390.0 | 28.9% |
-| 5 | 2,620.0 | 17.3% |
-| 6 | 1,040.0 | 6.9% |
+| 1 | 750.0 | 4.8% |
+| 2 | 1,470.0 | 9.5% |
+| 3 | 1,460.0 | 9.4% |
+| 4 | 3,700.0 | 23.9% |
+| 5 | 4,320.0 | 27.9% |
+| 6 | 3,780.0 | 24.4% |
 
 ![Figure 3. Number of years each location falls inside the signatory direct supply zone.](../figures/figure_3_persistence.png)
 
@@ -139,10 +140,10 @@ figure so that it reflects land that is legally available for conversion.
 
 | Zone type | Deforestation, 2008-2018 (thousand ha) | Committed emissions, 2008-2018 (MtCO2e) |
 | --- | --- | --- |
-| Signatory direct | 5.7 | 0.5 |
-| Signatory tier-1 indirect | 0.3 | 0.0 |
-| Non-signatory direct | 5.1 | 0.8 |
-| Non-signatory tier-1 indirect | 1.1 | 0.1 |
+| Signatory direct | 1.2 | 0.5 |
+| Signatory tier-1 indirect | 0.5 | 0.0 |
+| Non-signatory direct | 2.4 | 0.9 |
+| Non-signatory tier-1 indirect | 0.5 | 0.0 |
 
 ![Figure S2. Annual synthetic deforestation and committed carbon emissions inside the signatory direct zone.](../figures/figure_s2_deforestation_carbon.png)
 
@@ -181,10 +182,10 @@ leakage that indirect-supplier monitoring is designed to catch.
 
 | Monitoring scenario | Zone area (million ha) | Properties covered | Slaughter volume covered (%) |
 | --- | --- | --- | --- |
-| Current (signatory direct only) | 15.1 | 117 | 55.1% |
-| Add signatory tier-1 indirect | 15.8 | 131 | 60.8% |
-| Add non-signatory direct | 24.6 | 170 | 78.3% |
-| All direct and tier-1 suppliers | 24.6 | 170 | 78.3% |
+| Current (signatory direct only) | 15.6 | 115 | 54.8% |
+| Add signatory tier-1 indirect | 16.1 | 127 | 60.3% |
+| Add non-signatory direct | 23.8 | 168 | 77.6% |
+| All direct and tier-1 suppliers | 24.2 | 168 | 77.6% |
 
 ![Figure 6. Monitored area and slaughter-volume coverage under four expansion scenarios.](../figures/figure_6_expansion_pathways.png)
 
@@ -200,9 +201,9 @@ that any traceability system has to navigate.
 
 | Method | Mean zone area (million ha) | Median overestimate vs. this workflow (%) |
 | --- | --- | --- |
-| Incremental spatial-autocorrelation (this workflow) | 1.4 | - |
-| Simple radial buffer around the plant | 14.0 | 949.9% |
-| Supplier convex-hull proxy | 7.0 | - |
+| Incremental spatial-autocorrelation (this workflow) | 1.7 | - |
+| Simple radial buffer around the plant | 13.7 | 783.0% |
+| Supplier convex-hull proxy | 6.2 | - |
 
 ![Figure 9. Zone area under the incremental spatial-autocorrelation method compared with two simpler distance-based proxies.](../figures/figure_9_alternative_methods.png)
 

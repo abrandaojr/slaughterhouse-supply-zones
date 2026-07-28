@@ -11,7 +11,8 @@ def _geography_is_real(paths: dict) -> bool:
     if not marker.exists():
         return False
     try:
-        return json.loads(marker.read_text(encoding="utf-8")).get("source") == "openstreetmap"
+        source = json.loads(marker.read_text(encoding="utf-8")).get("source")
+        return source in ("openstreetmap", "natural_earth")
     except Exception:  # noqa: BLE001
         return False
 

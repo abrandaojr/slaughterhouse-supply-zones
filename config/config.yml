@@ -7,11 +7,15 @@ project:
 
 geography:
   # Makes the study area generic and worldwide: any place name resolvable by
-  # OpenStreetMap's Nominatim geocoder can be used here, not only Brazilian
-  # states. mode "osm" fetches real administrative boundaries (requires the
-  # optional `osmnx` dependency and network access); mode "synthetic" always
-  # uses the deterministic offline rectangular fallback below, useful for
-  # fully offline or sandboxed runs.
+  # OpenStreetMap's Nominatim geocoder, or matched in the Natural Earth
+  # admin-1 dataset, can be used here, not only Brazilian states.
+  # mode "osm" tries, in order: (1) OpenStreetMap via the optional `osmnx`
+  # dependency plus Nominatim/Overpass access; (2) the public-domain Natural
+  # Earth admin-1 boundaries, mirrored on GitHub, which need only a plain
+  # HTTPS fetch and so work in more restricted network environments; and
+  # (3) a deterministic offline rectangular layout as a last resort with no
+  # network dependency at all. mode "natural_earth" skips straight to tier 2.
+  # mode "synthetic" always uses the offline rectangular fallback.
   mode: osm
   place_queries:
     - "Rondônia, Brazil"

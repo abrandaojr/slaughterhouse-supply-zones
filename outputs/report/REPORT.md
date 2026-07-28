@@ -109,7 +109,7 @@ each one resolving a specific gap in the raw records:
 
 ![Figure 1. Synthetic study area, slaughterhouse locations, and linked properties.](../figures/figure_1_study_area.png)
 
-*Figure 1. Synthetic study area, slaughterhouse locations, and linked properties.*
+<p class="figure-caption">Figure 1. Synthetic study area, slaughterhouse locations, and linked properties.</p>
 
 ## 3. How large are supply zones, and how much do they overlap
 
@@ -145,11 +145,11 @@ the same ground.
 
 ![Figure 2. Cumulative overlap of all four supply-zone types, 2013-2018.](../figures/figure_2_zone_overlap.png)
 
-*Figure 2. Cumulative overlap of all four supply-zone types, 2013-2018.*
+<p class="figure-caption">Figure 2. Cumulative overlap of all four supply-zone types, 2013-2018.</p>
 
 ![Figure 10. Pairwise spatial overlap between zone types, summarized as a Jaccard index.](../figures/figure_10_zone_overlap_heatmap.png)
 
-*Figure 10. Pairwise spatial overlap between zone types, summarized as a Jaccard index.*
+<p class="figure-caption">Figure 10. Pairwise spatial overlap between zone types, summarized as a Jaccard index.</p>
 
 ## 4. Does the same area stay in the supply zone every year
 
@@ -176,13 +176,13 @@ appears only once is closer to noise.
 
 ![Figure 3. Number of years each location falls inside the signatory direct supply zone.](../figures/figure_3_persistence.png)
 
-*Figure 3. Number of years each location falls inside the signatory direct supply zone.*
+<p class="figure-caption">Figure 3. Number of years each location falls inside the signatory direct supply zone.</p>
 
 ## 5. What land cover is inside each supply zone
 
 ![Figure 4. Land-cover composition inside each supply-zone type.](../figures/figure_4_land_use_composition.png)
 
-*Figure 4. Land-cover composition inside each supply-zone type.*
+<p class="figure-caption">Figure 4. Land-cover composition inside each supply-zone type.</p>
 
 Knowing how large a supply zone is says little on its own; what matters for
 a deforestation question is what covers the ground inside it. Every
@@ -217,7 +217,7 @@ mixed into the annual trend shown below.
 
 ![Figure S2. Annual synthetic deforestation and committed carbon emissions inside the signatory direct zone.](../figures/figure_s2_deforestation_carbon.png)
 
-*Figure S2. Annual synthetic deforestation and committed carbon emissions inside the signatory direct zone.*
+<p class="figure-caption">Figure S2. Annual synthetic deforestation and committed carbon emissions inside the signatory direct zone.</p>
 
 ## 7. How the supply-zone radius is chosen for each plant and year
 
@@ -238,13 +238,13 @@ footprint.
 
 ![Figure 5. Correlogram of Moran's I against distance for four example slaughterhouses; the marked point is the distance actually used to build that plant-year's zone.](../figures/figure_5_moran_correlogram.png)
 
-*Figure 5. Correlogram of Moran's I against distance for four example slaughterhouses; the marked point is the distance actually used to build that plant-year's zone.*
+<p class="figure-caption">Figure 5. Correlogram of Moran's I against distance for four example slaughterhouses; the marked point is the distance actually used to build that plant-year's zone.</p>
 
 ## 8. Where does the cattle that leaves a signatory property end up
 
 ![Figure 7. Destination of cattle heads that leave signatory direct properties.](../figures/figure_7_supplier_flows.png)
 
-*Figure 7. Destination of cattle heads that leave signatory direct properties.*
+<p class="figure-caption">Figure 7. Destination of cattle heads that leave signatory direct properties.</p>
 
 A sourcing commitment made by a signatory plant only covers the animals it
 buys directly; it says nothing about what happens to cattle once they leave
@@ -272,7 +272,7 @@ plant-year in the synthetic dataset.
 
 ![Figure 8. Distribution of two distance measures: tier-1 indirect supplier to nearest direct supplier, and signatory plant to nearest non-signatory plant.](../figures/figure_8_distance_distribution.png)
 
-*Figure 8. Distribution of two distance measures: tier-1 indirect supplier to nearest direct supplier, and signatory plant to nearest non-signatory plant.*
+<p class="figure-caption">Figure 8. Distribution of two distance measures: tier-1 indirect supplier to nearest direct supplier, and signatory plant to nearest non-signatory plant.</p>
 
 ## 10. What would happen if monitoring were extended
 
@@ -292,7 +292,7 @@ every direct and tier-1 indirect supplier regardless of sourcing commitment.
 
 ![Figure 6. Monitored area and slaughter-volume coverage under four expansion scenarios.](../figures/figure_6_expansion_pathways.png)
 
-*Figure 6. Monitored area and slaughter-volume coverage under four expansion scenarios.*
+<p class="figure-caption">Figure 6. Monitored area and slaughter-volume coverage under four expansion scenarios.</p>
 
 Adding non-signatory direct suppliers to the monitored footprint captures
 far more of the slaughter volume in this synthetic scenario than adding
@@ -311,7 +311,7 @@ public or private, has to navigate deliberately rather than by default.
 
 ![Figure 9. Zone area under the incremental spatial-autocorrelation method compared with two simpler distance-based proxies.](../figures/figure_9_alternative_methods.png)
 
-*Figure 9. Zone area under the incremental spatial-autocorrelation method compared with two simpler distance-based proxies.*
+<p class="figure-caption">Figure 9. Zone area under the incremental spatial-autocorrelation method compared with two simpler distance-based proxies.</p>
 
 Simple proxies, such as drawing a fixed-radius buffer around the plant, tend
 to overestimate the true supply zone because they cannot see the actual
@@ -340,7 +340,7 @@ own territory it actually covers.
 
 ![Figure 11. Share of each region's territory that falls inside the cumulative signatory direct supply zone.](../figures/figure_11_state_coverage_map.png)
 
-*Figure 11. Share of each region's territory that falls inside the cumulative signatory direct supply zone.*
+<p class="figure-caption">Figure 11. Share of each region's territory that falls inside the cumulative signatory direct supply zone.</p>
 
 ## 13. Limitations
 

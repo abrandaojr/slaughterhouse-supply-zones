@@ -56,7 +56,7 @@ def _markdown_table(df: pd.DataFrame) -> str:
 
 
 def _image(path: str, caption: str) -> str:
-    return f'![{caption}]({path})\n\n*{caption}*'
+    return f'![{caption}]({path})\n\n<p class="figure-caption">{caption}</p>'
 
 
 def _table_zone_overview(zones: gpd.GeoDataFrame) -> str:

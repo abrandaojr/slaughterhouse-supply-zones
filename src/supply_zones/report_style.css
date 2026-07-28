@@ -64,7 +64,7 @@ img {
     page-break-inside: avoid;
 }
 
-em {
+.figure-caption {
     display: block;
     text-align: center;
     font-size: 9pt;

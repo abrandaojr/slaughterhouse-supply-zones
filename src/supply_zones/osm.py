@@ -98,14 +98,15 @@ def _fetch_from_osm(
     return gdf.to_crs(metric_crs)
 
 
-def resolve_admin_units(cfg: dict) -> tuple[gpd.GeoDataFrame, str]:
+def resolve_admin_units(cfg: dict) -> tuple[gpd.GeoDataFrame, str, bool]:
     """Resolve the study area's administrative units and an appropriate CRS.
 
     Returns a GeoDataFrame with ``state``, ``state_name``, and ``geometry``
-    columns in a locally appropriate projected CRS, plus that CRS as a string
-    for bookkeeping. Any place in the world can be requested through
-    ``geography.place_queries``; nothing else in the pipeline is
-    Brazil-specific or otherwise geography-locked.
+    columns in a locally appropriate projected CRS, that CRS as a string, and
+    a boolean indicating whether real OpenStreetMap geometry was used (as
+    opposed to the deterministic offline fallback). Any place in the world
+    can be requested through ``geography.place_queries``; nothing else in the
+    pipeline is Brazil-specific or otherwise geography-locked.
     """
     geography_cfg = cfg.get("geography", {})
     mode = geography_cfg.get("mode", "synthetic")
@@ -121,7 +122,7 @@ def resolve_admin_units(cfg: dict) -> tuple[gpd.GeoDataFrame, str]:
                 "[geography] Using real administrative boundaries from "
                 f"OpenStreetMap for: {', '.join(place_queries)}"
             )
-            return gdf, str(gdf.crs)
+            return gdf, str(gdf.crs), True
         except Exception as exc:  # noqa: BLE001 - any failure should fall back cleanly
             print(
                 "[geography] Could not fetch OpenStreetMap boundaries "
@@ -140,4 +141,4 @@ def resolve_admin_units(cfg: dict) -> tuple[gpd.GeoDataFrame, str]:
         for i, (code, bounds) in enumerate(layout.items())
     ]
     gdf = gpd.GeoDataFrame(rows, geometry="geometry", crs=fallback_crs)
-    return gdf, fallback_crs
+    return gdf, fallback_crs, False

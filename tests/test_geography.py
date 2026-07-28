@@ -39,9 +39,10 @@ def test_resolve_admin_units_uses_osm_when_available(tmp_path, monkeypatch):
     }
     monkeypatch.setitem(sys.modules, "osmnx", _fake_osmnx_module(polygons))
 
-    gdf, crs = osm_module.resolve_admin_units(cfg)
+    gdf, crs, used_real_osm = osm_module.resolve_admin_units(cfg)
 
     assert set(gdf["state"]) == {"TA", "TB"}
+    assert used_real_osm is True
     assert gdf.crs is not None and not gdf.crs.is_geographic
     cache_dir = tmp_path / "data" / "raw" / "osm_cache"
     assert (cache_dir / "testland_a.geojson").exists()
@@ -69,9 +70,10 @@ def test_resolve_admin_units_falls_back_without_osmnx(tmp_path, monkeypatch):
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
 
-    gdf, crs = osm_module.resolve_admin_units(cfg)
+    gdf, crs, used_real_osm = osm_module.resolve_admin_units(cfg)
 
     assert set(gdf["state"]) == {"NA", "NB", "NC"}
+    assert used_real_osm is False
     assert len(gdf) == 3
     assert gdf.crs is not None
 
@@ -85,8 +87,9 @@ def test_resolve_admin_units_synthetic_mode_skips_osm_entirely(tmp_path):
         "place_queries": ["Anywhere, Anycountry"],
         "unit_codes": ["A1"],
     }
-    gdf, crs = osm_module.resolve_admin_units(cfg)
+    gdf, crs, used_real_osm = osm_module.resolve_admin_units(cfg)
     assert list(gdf["state"]) == ["A1"]
+    assert used_real_osm is False
 
 
 def test_fallback_layout_handles_arbitrary_unit_counts():

@@ -21,7 +21,8 @@ import numpy as np
 import pandas as pd
 from matplotlib.lines import Line2D
 
-from supply_zones.config import cumulative_scope_label, ensure_directories, year_range_label
+from supply_zones.config import cumulative_scope_label, ensure_directories
+from supply_zones.mapping import add_basemap_if_available
 
 ZONE_ORDER = ["CA_direct", "CA_tier1_indirect", "non_CA_direct", "non_CA_tier1_indirect"]
 ZONE_LABELS = {
@@ -69,17 +70,6 @@ def _finish(fig, path) -> None:
     plt.close(fig)
 
 
-def _footer(ax, text: str = "Illustrative synthetic data. No confidential GTA, CAR, or slaughterhouse records are used.") -> None:
-    ax.annotate(
-        text,
-        xy=(0, -0.14),
-        xycoords="axes fraction",
-        fontsize=7.5,
-        color="#777777",
-        ha="left",
-    )
-
-
 def _short_label(name: str) -> str:
     """Shorten a place name (e.g. 'Rondônia, Brazil') to its first segment for compact map labels."""
     return name.split(",")[0].strip()
@@ -122,13 +112,6 @@ def chart_landuse_composition(cfg: dict, land_use: pd.DataFrame) -> None:
 
     ax.set_xlim(0, max(left.max() * 1.02, 100))
     ax.set_xlabel("Share of zone area covered by each land-cover class (%)")
-    ax.set_title(
-        "Figure 4. Natural vegetation covers about a quarter of signatory direct\n"
-        "supply zones, roughly the same share as in non-signatory zones",
-        loc="left",
-        fontsize=12,
-        weight="bold",
-    )
     ax.legend(
         loc="upper center",
         bbox_to_anchor=(0.5, -0.16),
@@ -136,7 +119,6 @@ def chart_landuse_composition(cfg: dict, land_use: pd.DataFrame) -> None:
         frameon=False,
         fontsize=9,
     )
-    _footer(ax, "Illustrative synthetic data. Coverage is computed against the full study area, not only the mapped zone.")
     _finish(fig, paths["figures"] / "figure_4_land_use_composition.png")
 
 
@@ -162,25 +144,12 @@ def chart_moran_correlogram(cfg: dict, incremental_moran: pd.DataFrame) -> None:
         ax.set_xlabel("Distance band (km)")
         ax.axhline(0, color="#AAAAAA", linewidth=0.8)
     axes[0].set_ylabel("Global Moran's I (cattle-volume weighted)")
-    fig.suptitle(
-        "Figure 5. Each supply zone's radius is chosen at its own peak of spatial autocorrelation,\n"
-        "not from a single fixed distance",
-        x=0.01,
-        ha="left",
-        fontsize=12,
-        weight="bold",
-    )
     legend_elements = [
         Line2D([0], [0], color="#6096BA", label="Annual correlogram"),
         Line2D([0], [0], marker="o", color="w", markerfacecolor="#B2182B", markersize=7, label="Selected distance (peak I)"),
     ]
-    fig.legend(handles=legend_elements, loc="lower center", ncol=2, frameon=False, bbox_to_anchor=(0.5, -0.12))
-    fig.text(
-        0.01, -0.2,
-        "Illustrative synthetic data. Four slaughterhouses with the most complete annual series are shown.",
-        fontsize=7.5, color="#777777", ha="left",
-    )
-    fig.tight_layout(rect=[0, 0.05, 1, 0.92])
+    fig.legend(handles=legend_elements, loc="lower center", ncol=2, frameon=False, bbox_to_anchor=(0.5, -0.05))
+    fig.tight_layout(rect=[0, 0.05, 1, 1])
     _finish(fig, paths["figures"] / "figure_5_moran_correlogram.png")
 
 
@@ -188,7 +157,7 @@ def chart_expansion_pathways(cfg: dict, expansion: pd.DataFrame) -> None:
     """Grouped bars comparing monitoring coverage under expansion scenarios."""
     paths = ensure_directories(cfg)
     labels = {
-        "current_CA_direct": "Current\n(CA direct only)",
+        "current_CA_direct": "Current\n(signatory direct only)",
         "pathway_1_add_CA_tier1": "+ Signatory tier-1\nindirect",
         "pathway_2_add_non_CA_direct": "+ Non-signatory\ndirect",
         "pathway_3_all_direct_and_tier1": "All direct\n+ tier-1",
@@ -218,18 +187,10 @@ def chart_expansion_pathways(cfg: dict, expansion: pd.DataFrame) -> None:
     ax.set_xticklabels([labels[item] for item in data.index], fontsize=9)
     ax.set_ylabel("Monitored zone area (million ha)", color="#2166AC")
     ax2.set_ylabel("Slaughter volume covered (%)", color="#B2451F")
-    ax.set_title(
-        "Figure 6. Extending monitoring to non-signatory direct suppliers would roughly\n"
-        "triple the covered slaughter volume, at the cost of a much larger footprint",
-        loc="left",
-        fontsize=12,
-        weight="bold",
-    )
     for bar in bars_area:
         ax.annotate(f"{bar.get_height():.1f}", (bar.get_x() + bar.get_width() / 2, bar.get_height()), ha="center", va="bottom", fontsize=8, color="#2166AC")
     for bar in bars_volume:
         ax2.annotate(f"{bar.get_height():.0f}%", (bar.get_x() + bar.get_width() / 2, bar.get_height()), ha="center", va="bottom", fontsize=8, color="#B2451F")
-    _footer(ax)
     _finish(fig, paths["figures"] / "figure_6_expansion_pathways.png")
 
 
@@ -259,14 +220,6 @@ def chart_supplier_flows(cfg: dict, flows: pd.DataFrame) -> None:
         ax.text(value + 1, bar.get_y() + bar.get_height() / 2, f"{value:.0f}%", va="center", fontsize=10)
     ax.set_xlim(0, max(data["percent"]) * 1.2)
     ax.set_xlabel("Share of cattle heads leaving signatory direct properties (%)")
-    ax.set_title(
-        "Figure 7. Under half of the cattle leaving signatory direct properties are\n"
-        "slaughtered at a signatory plant; the rest exit through other channels",
-        loc="left",
-        fontsize=12,
-        weight="bold",
-    )
-    _footer(ax)
     _finish(fig, paths["figures"] / "figure_7_supplier_flows.png")
 
 
@@ -289,14 +242,6 @@ def chart_distance_distribution(cfg: dict, distances: pd.DataFrame) -> None:
     ax.set_xticks(range(1, len(labels) + 1))
     ax.set_xticklabels(list(labels.values()), fontsize=9.5)
     ax.set_ylabel("Distance (km)")
-    ax.set_title(
-        "Figure 8. Indirect suppliers typically sit within about 35-55 km of a direct\n"
-        "supplier, while signatory and non-signatory plants are more widely separated",
-        loc="left",
-        fontsize=12,
-        weight="bold",
-    )
-    _footer(ax)
     _finish(fig, paths["figures"] / "figure_8_distance_distribution.png")
 
 
@@ -324,15 +269,7 @@ def chart_alternative_methods(cfg: dict, alternatives: pd.DataFrame) -> None:
     )
     ax.set_xlabel("Zone area, incremental-autocorrelation method (million ha)")
     ax.set_ylabel("Zone area, alternative method (million ha)")
-    ax.set_title(
-        "Figure 9. Simpler distance-based proxies systematically overestimate zone\n"
-        "area relative to the incremental spatial-autocorrelation method",
-        loc="left",
-        fontsize=12,
-        weight="bold",
-    )
     ax.legend(frameon=False, loc="upper left", fontsize=9)
-    _footer(ax, "Illustrative synthetic data. The supplier-hull proxy is a transparent stand-in, not a reconstruction of unpublished ArcGIS parameters.")
     _finish(fig, paths["figures"] / "figure_9_alternative_methods.png")
 
 
@@ -358,8 +295,6 @@ def chart_zone_overlap_heatmap(cfg: dict, overlap: pd.DataFrame) -> None:
                 color="white" if value > 55 else "#222222", fontsize=9,
             )
     fig.colorbar(image, ax=ax, shrink=0.8, label="Spatial overlap (Jaccard, %)")
-    ax.set_title("Figure 10. Pairwise spatial overlap between supply-zone types", loc="left", fontsize=12, weight="bold")
-    _footer(ax)
     _finish(fig, paths["figures"] / "figure_10_zone_overlap_heatmap.png")
 
 
@@ -383,7 +318,7 @@ def map_state_coverage(cfg: dict, cumulative: gpd.GeoDataFrame) -> None:
 
     fig, ax = plt.subplots(figsize=(7.5, 7))
     states.plot(
-        ax=ax, column="coverage_percent", cmap="YlGn", edgecolor="#333333", linewidth=1,
+        ax=ax, column="coverage_percent", cmap="YlGn", edgecolor="#333333", linewidth=1, alpha=0.8,
         legend=True, legend_kwds={"label": "Share of regional area inside the signatory direct zone (%)", "shrink": 0.7},
         vmin=0, vmax=max(60, coverage.max() * 1.1),
     )
@@ -394,13 +329,8 @@ def map_state_coverage(cfg: dict, cumulative: gpd.GeoDataFrame) -> None:
             point.x, point.y, f"{label}\n{row.coverage_percent:.0f}%",
             ha="center", va="center", fontsize=10, weight="bold", color="#1A1A1A",
         )
+    add_basemap_if_available(ax, states.crs, paths)
     ax.set_axis_off()
-    ax.set_title(
-        f"Figure 11. Share of each region's territory falling inside the cumulative\n"
-        f"signatory direct supply zone, {year_range_label(cfg)}",
-        loc="left", fontsize=12, weight="bold",
-    )
-    _footer(ax)
     _finish(fig, paths["figures"] / "figure_11_state_coverage_map.png")
 
 

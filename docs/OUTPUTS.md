@@ -33,3 +33,5 @@ The original six PNG files mirror the topics of Figures 1–3 and Supplementary 
 
 Run `python -m supply_zones report` to rebuild only the report and its dedicated figures from already-computed tables, or `python -m supply_zones all` to regenerate everything from scratch.
 
+Figures carry no in-image titles or disclaimer footers; captions live in `outputs/report/REPORT.md`. Geographic figures (`figure_1`, `figure_2`, `figure_3`, `figure_s3`, `figure_11`) draw a real OpenStreetMap tile basemap behind the synthetic data when `geography.mode: osm` resolves real boundaries (see `src/supply_zones/mapping.py`); this is skipped automatically in the offline fallback.
+

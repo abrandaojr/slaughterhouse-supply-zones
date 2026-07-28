@@ -87,8 +87,12 @@ def generate_synthetic_data(cfg: dict) -> dict[str, Path]:
     raw = paths["raw"]
     rng = np.random.default_rng(cfg["project"]["seed"])
 
-    admin_units, crs = resolve_admin_units(cfg)
+    admin_units, crs, used_real_osm = resolve_admin_units(cfg)
     cfg["project"]["crs"] = crs
+    (raw / "geography_source.json").write_text(
+        json.dumps({"source": "openstreetmap" if used_real_osm else "synthetic_fallback"}, indent=2),
+        encoding="utf-8",
+    )
     STATE_LAYOUT = {
         row.state: row.geometry.bounds for row in admin_units.itertuples(index=False)
     }

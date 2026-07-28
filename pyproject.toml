@@ -25,7 +25,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.5"]
-osm = ["osmnx>=1.9"]
+osm = ["osmnx>=1.9", "contextily>=1.6"]
 
 [project.scripts]
 supply-zones = "supply_zones.cli:main"

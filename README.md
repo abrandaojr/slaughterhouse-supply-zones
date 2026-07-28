@@ -69,6 +69,8 @@ docker run --rm -v "${PWD}/outputs:/app/outputs" synthetic-supply-zones
 
 The study area is not hardcoded to Brazil. `geography.place_queries` in `config/config.yml` names the regions to use, and can name *any* place recognized by OpenStreetMap, worldwide. With `geography.mode: osm` and the optional `osmnx` dependency (`pip install -e ".[osm]"`) plus network access, real administrative boundaries are fetched from OpenStreetMap and cached locally. Without network access, or with `geography.mode: synthetic`, a deterministic offline rectangular layout is used instead, so the pipeline always remains fully reproducible. Either way, no other part of the codebase is geography-specific.
 
+When real OpenStreetMap boundaries are used, maps also draw a real OpenStreetMap tile basemap behind the synthetic data (`src/supply_zones/mapping.py`), using the optional `contextily` dependency (included in the same `osm` extra) and network access to a tile server. This is skipped automatically in the offline fallback, since overlaying real map tiles behind an arbitrary rectangular layout would be meaningless. Figures carry no titles or disclaimer text baked into the image itself; captions and the fictitious-data notice live in the surrounding Markdown report instead.
+
 ## Important methodological note
 
 The published analysis used ArcGIS Pro 3.1.3 Incremental Spatial Autocorrelation and Aggregate Polygons. This repository uses transparent open-source analogues:

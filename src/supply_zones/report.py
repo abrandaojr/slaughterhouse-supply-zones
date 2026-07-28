@@ -218,72 +218,108 @@ def build_report(cfg: dict, zones: gpd.GeoDataFrame, results: dict) -> Path:
 
 ## Executive summary
 
-Cattle can travel through several properties before reaching a slaughterhouse,
-which makes it hard to know exactly where the animals a company buys actually
-came from. This report walks through a complete, open-source, geographically
-generic workflow that estimates the area, or **supply zone**, that feeds each
-slaughterhouse, and separates that area into farms that sell cattle directly
-to the plant from farms that sell only through an intermediary. The workflow
-can be pointed at any region in the world by naming it in the project
-configuration; real administrative boundaries are then fetched from
+A single animal can pass through several farms before it ever reaches a
+slaughterhouse: born on one property, raised on a second, fattened on a
+third. Purchase records typically show only the last step, the sale to the
+plant, so a company or regulator who wants to know where its cattle actually
+came from is left trying to reconstruct a chain of custody from a single
+snapshot. This report walks through a complete, open-source, and
+geographically generic workflow that tackles that problem by estimating the
+**supply zone** of each slaughterhouse: the geographic area where its
+cattle most plausibly originate, split into farms that sell straight to the
+plant (direct suppliers) and farms that sell only through a middle step
+(tier-1 indirect suppliers). Unlike the original study this workflow is
+based on, which was built around one country, this version can be pointed at
+any region in the world simply by naming it in the project configuration.
+Real administrative boundaries are then fetched automatically from
 OpenStreetMap or the public-domain Natural Earth dataset, both open and
-globally available, or a deterministic offline layout is used when neither
-can be reached. Using an
-illustrative synthetic dataset configured for {place_phrase}, across
-{n_states} regions, {n_plants} slaughterhouses, and the years {years}, the
-workflow finds that the average direct supply zone of a signatory plant (a
-plant that has joined a public sourcing commitment) covers about
-{_fmt_1(ca_direct_area)} million hectares, that roughly a quarter of that area
-is natural vegetation, and that extending monitoring to indirect suppliers or
-non-signatory plants would substantially widen coverage of the cattle trade
-at the cost of a much larger area to monitor. Every number below comes from
-fictitious data; the value of the exercise is the method, not the estimate."""
-    )
+globally available, and the workflow falls back to a deterministic offline
+layout only if neither can be reached. Using an illustrative synthetic
+dataset configured for {place_phrase}, spanning {n_states} regions,
+{n_plants} slaughterhouses, and the years {years}, the workflow finds that
+the average direct supply zone of a signatory plant (a plant that has joined
+a public sourcing commitment) covers about {_fmt_1(ca_direct_area)} million
+hectares, that roughly a quarter of that area is natural vegetation, and
+that extending monitoring further out to indirect suppliers or to plants
+without a sourcing commitment would substantially widen how much of the
+cattle trade is actually covered, at the cost of a much larger area to keep
+track of. Because every number below is computed from fictitious data built
+specifically for this repository, none of it describes anything about real
+cattle, farms, or companies; the value of the exercise lies entirely in the
+method, which can be pointed at a real dataset once one is available.
 
-    sections.append(
-        """## 1. Why supply zones matter
+## 1. Why supply zones matter
 
 Companies, regulators, and civil-society groups that want to know whether
-cattle products are linked to deforestation face a basic geographic problem:
-purchase records name a slaughterhouse, not a location on a map. A supply
-zone translates the plant's likely catchment area for cattle into an
-explicit polygon, so it can be overlaid with land use, deforestation, and
-protected-area data to ask questions such as: how much of a plant's likely
-sourcing area still has forest cover, and how does that compare between
-plants that have signed a public sourcing commitment (referred to here as
-"signatory" plants, after Brazil's Cattle Agreement, the case this workflow
-was originally built around) and plants that have not.
+cattle products are linked to deforestation run into a basic geographic
+problem before they can even start: a purchase record names a
+slaughterhouse, not a location on a map, and certainly not the pasture where
+an animal actually grazed. A supply zone is a way of closing that gap. It
+translates a plant's likely catchment area for cattle into an explicit
+polygon that can be laid on top of other spatial data, land use, recent
+deforestation, or the boundaries of protected areas, so that a concrete
+question can finally be answered: how much of a plant's likely sourcing area
+still has forest cover, and how does that compare between plants that have
+signed a public sourcing commitment (referred to throughout this report as
+"signatory" plants, after Brazil's Cattle Agreement, the real-world case
+this workflow was originally built around) and plants that have not.
 
-The original study built these zones from confidential cattle-transit permits
-(GTA) and rural property registrations (CAR) using proprietary ArcGIS
-routines. This repository asks a narrower question with synthetic stand-in
-data: can the same analytical logic be reproduced end to end with transparent,
-open-source tools, and does doing so change how the results should be read.
-Full methodological detail is in `docs/METHODS.md`; this report focuses on
-what each result means for a non-specialist reader."""
+Estimating a supply zone is harder than it sounds, though, because most of
+the trail is invisible. An animal's ownership can change hands two, three,
+or more times between birth and slaughter, and every one of those
+intermediate sales is a point where a buyer's sourcing commitment can
+quietly stop applying, a pattern sometimes called cattle laundering. The
+original study this repository reconstructs tackled that problem using
+confidential cattle-transit permits (GTA, in the Brazilian system) and rural
+property registrations (CAR), processed through proprietary ArcGIS
+routines. Those routines are not published in full, and the underlying
+records cannot be shared, which makes the published method difficult for an
+outside reader to check or adapt. This repository asks a narrower, more
+mechanical question with synthetic stand-in data instead: can the same
+analytical logic be reproduced end to end using transparent, open-source
+tools, and does building it that way change how the results should be read
+or where they might mislead. Full methodological detail, including every
+explicit decision made where the original publication left a parameter
+unspecified, is in `docs/METHODS.md`; this report stays at the level of what
+each result means for a reader without a background in spatial statistics
+or supply-chain traceability."""
     )
 
     sections.append(
         f"""## 2. Study design in brief
 
-The workflow simulates {n_years} years of fictitious cattle-transit records, rural
-property boundaries, slaughterhouse locations, land use, and deforestation
-across {n_states} regions. It then:
+The workflow simulates {n_years} years of fictitious cattle-transit records,
+rural property boundaries, slaughterhouse locations, land use, and
+deforestation across {n_states} regions. It then works through five stages,
+each one resolving a specific gap in the raw records:
 
-1. Links each transit record to a property using deterministic matching rules.
-2. Classifies slaughterhouses as eligible when they process more than 1,000
-   head per year and hold a sanitary inspection code, matching the
-   thresholds used in the source study.
-3. Identifies **direct suppliers** (properties that sell straight to an
-   eligible plant) and **tier-1 indirect suppliers** (properties that sell to
-   a direct supplier, using the same 16-head minimum transaction threshold).
-4. Chooses, separately for every plant and year, the distance at which
-   cattle-volume-weighted spatial clustering (Global Moran's I) peaks, and
+1. **Links each transit record to a property** using deterministic matching
+   rules based on tax identifiers, owner names, and municipality, since the
+   transit system and the property registry are separate databases that do
+   not share a common key.
+2. **Classifies slaughterhouses as eligible** when they process more than
+   1,000 head per year and hold a sanitary inspection code, matching the
+   thresholds used in the source study; this filters out very small or
+   informal operations for which a supply zone would be statistically
+   meaningless.
+3. **Identifies direct suppliers** (properties that sell straight to an
+   eligible plant) and **tier-1 indirect suppliers** (properties that sell
+   to a direct supplier, using the same 16-head minimum transaction
+   threshold), which is the step that reconstructs one link of the hidden
+   ownership chain described in Section 1.
+4. **Chooses, separately for every plant and year, the distance at which
+   cattle-volume-weighted spatial clustering (Global Moran's I) peaks**, and
    uses that distance to aggregate supplier properties into a single supply
    zone (an open-source analogue of the original ArcGIS Aggregate Polygons
-   step).
-5. Cross-tabulates the resulting zones against land use, deforestation,
-   carbon density, and protected or military areas.
+   step). In plain terms, Moran's I asks whether nearby supplier properties
+   tend to sell similar volumes of cattle to the same plant more often than
+   chance would predict; the distance at which that pattern is strongest is
+   read as the natural edge of the plant's catchment, rather than an
+   arbitrary fixed radius applied to every plant alike.
+5. **Cross-tabulates the resulting zones** against land use, deforestation,
+   carbon density, and protected or military areas, which is what turns a
+   plain polygon into an answer to the forest-cover question posed in
+   Section 1.
 
 {_image(f'{figures_relative}/figure_1_study_area.png', 'Figure 1. Synthetic study area, slaughterhouse locations, and linked properties.')}"""
     )
@@ -293,11 +329,19 @@ across {n_states} regions. It then:
 
 {_table_zone_overview(zones)}
 
-Signatory plants have direct supply zones that are, on average, larger
-than their non-signatory counterparts in this synthetic dataset, largely
-because signatory plants tend to source from more properties. The zones are
-not mutually exclusive: a property can appear inside more than one plant's
-catchment, and different zone types partly cover the same territory.
+Signatory plants have direct supply zones that are, on average, larger than
+their non-signatory counterparts in this synthetic dataset, largely because
+signatory plants tend to source from more properties in the first place. The
+zones are not neat, mutually exclusive territories: a single property can
+sit inside more than one plant's catchment at once, and different zone types
+can cover much of the same ground. That matters in practice because a
+company auditing only its own direct supply zone may be looking at land that
+a competitor, or a non-signatory plant, is drawing from just as heavily. The
+table below reports the **Jaccard overlap index**, a standard way of scoring
+how much two areas share: it divides the size of their intersection by the
+size of their combined footprint, so a value near 0% means the two zone
+types barely touch and a value near 100% means they occupy almost exactly
+the same ground.
 
 {_table_overlap(overlap)}
 
@@ -309,10 +353,17 @@ catchment, and different zone types partly cover the same territory.
     sections.append(
         f"""## 4. Does the same area stay in the supply zone every year
 
-A property that supplies a plant only once is a weaker basis for monitoring
-than one that supplies it consistently. The workflow tracks, pixel by pixel,
-how many of the {n_years} years a location falls inside the signatory direct
-supply zone.
+Not every property that shows up in a supply zone one year belongs there
+every year; a farm might sell to a given plant once and never again,
+because of a one-off price advantage or a chance connection. That kind of
+one-year appearance is a much weaker basis for ongoing monitoring than a
+property that supplies the same plant consistently, since resources spent
+verifying a supplier who will not sell there again are largely wasted. To
+tell the two apart, the workflow tracks, pixel by pixel across the whole
+study area, how many of the {n_years} years each location falls inside the
+signatory direct supply zone; a location that appears in all {n_years} years
+is a stable, recurring part of the plant's catchment, while one that
+appears only once is closer to noise.
 
 {_table_persistence(persistence)}
 
@@ -324,10 +375,17 @@ supply zone.
 
 {_image(f'{figures_relative}/figure_4_land_use_composition.png', 'Figure 4. Land-cover composition inside each supply-zone type.')}
 
-Natural vegetation, pasture, soybean cropland, and a residual "other" class
-are cross-tabulated against each zone type, after excluding officially
-protected and military areas from the denominator for the natural-vegetation
-figure so that it reflects land that is legally available for conversion."""
+Knowing how large a supply zone is says little on its own; what matters for
+a deforestation question is what covers the ground inside it. Every
+property in the workflow is cross-tabulated against four simplified
+land-cover classes: natural vegetation, pasture, soybean cropland, and a
+residual "other" category. For the natural-vegetation figure specifically,
+officially protected areas and military land are excluded from the
+denominator, since that land cannot legally be cleared regardless of who
+owns the cattle passing through the zone; leaving it in the calculation
+would understate how much of the *legally convertible* land inside a supply
+zone is still forested, which is the figure that actually matters for
+assessing deforestation risk going forward."""
     )
 
     sections.append(
@@ -335,17 +393,36 @@ figure so that it reflects land that is legally available for conversion."""
 
 {_table_deforestation(deforestation)}
 
+Clearing forest does not just remove trees from a map; it releases the
+carbon stored in that biomass, mostly through burning or decomposition. The
+table above reports both the cleared area and the **committed emissions**
+that clearing implies, estimated from the carbon density of the vegetation
+that was there before. Synthetic deforestation polygons dated at or before
+2007 are tracked separately from those dated 2008 onward (a split inherited
+from the source study's use of the Brazilian Forest Code's own historical
+cutoff for legacy clearing), so that older, already-settled clearing is not
+mixed into the annual trend shown below.
+
 {_image(f'{figures_relative}/figure_s2_deforestation_carbon.png', 'Figure S2. Annual synthetic deforestation and committed carbon emissions inside the signatory direct zone.')}"""
     )
 
     sections.append(
         f"""## 7. How the supply-zone radius is chosen for each plant and year
 
-Rather than applying one fixed radius to every plant, the workflow tests a
-range of distances for each plant-year and keeps the one at which
-cattle-volume-weighted spatial clustering is strongest. This makes zones
-larger around plants with a spatially concentrated supplier base and smaller
-around plants whose suppliers are scattered.
+Rather than applying one fixed radius to every plant, which would draw the
+same size circle around a plant with a tightly clustered set of suppliers as
+around one whose suppliers are scattered over a much wider area, the
+workflow tests a whole range of candidate distances for each plant-year and
+keeps whichever one shows the strongest cattle-volume-weighted spatial
+clustering. Intuitively: as the candidate distance grows outward from the
+plant, the properties captured inside it either keep looking more alike in
+how much cattle they sell to that plant, in which case the true edge of the
+catchment has not been reached yet, or they start looking like an
+unrelated, random mix, which signals that the boundary has been crossed. The
+distance right before that shift is read as the natural edge of the
+catchment. This produces supply zones that adapt to each plant's actual
+sourcing geography instead of forcing every plant into an identical
+footprint.
 
 {_image(f'{figures_relative}/figure_5_moran_correlogram.png', "Figure 5. Correlogram of Moran's I against distance for four example slaughterhouses; the marked point is the distance actually used to build that plant-year's zone.")}"""
     )
@@ -355,14 +432,31 @@ around plants whose suppliers are scattered.
 
 {_image(f'{figures_relative}/figure_7_supplier_flows.png', 'Figure 7. Destination of cattle heads that leave signatory direct properties.')}
 
-Only part of the cattle that leaves a signatory direct property is
-slaughtered at a signatory plant; the remainder is either slaughtered
-elsewhere or moved to another property first, which is exactly the kind of
-leakage that indirect-supplier monitoring is designed to catch."""
+A sourcing commitment made by a signatory plant only covers the animals it
+buys directly; it says nothing about what happens to cattle once they leave
+one of that plant's own supplier properties for somewhere else. In this
+synthetic scenario, only part of the cattle leaving a signatory direct
+property is slaughtered at a signatory plant at all. The remainder is either
+slaughtered at a plant with no sourcing commitment or moved on to another
+property first, re-entering the same invisible chain described in Section
+1. That second pathway is precisely the leakage that indirect-supplier
+monitoring, the tier-1 layer built earlier in this workflow, is designed to
+catch, since it follows the animal one step further instead of stopping at
+the first sale."""
     )
 
     sections.append(
         f"""## 9. How far apart are direct suppliers, indirect suppliers, and rival plants
+
+Distance shapes both how practical monitoring is and how competitive the
+local market for cattle looks. A tier-1 indirect supplier that sits far from
+any direct supplier is harder and more expensive to fold into a monitoring
+program, since verification usually means an actual visit to the property.
+A signatory plant that sits close to a non-signatory rival, meanwhile, is
+competing for cattle from a similar pool of nearby farms, which is part of
+why the two plant types' supply zones showed meaningful overlap in Section
+3. The two distributions below summarize both distances across every
+plant-year in the synthetic dataset.
 
 {_image(f'{figures_relative}/figure_8_distance_distribution.png', 'Figure 8. Distribution of two distance measures: tier-1 indirect supplier to nearest direct supplier, and signatory plant to nearest non-signatory plant.')}"""
     )
@@ -370,15 +464,23 @@ leakage that indirect-supplier monitoring is designed to catch."""
     sections.append(
         f"""## 10. What would happen if monitoring were extended
 
+Every one of the choices above, how far monitoring reaches, is ultimately a
+budget decision: verifying a supplier costs money and staff time, so a
+company or regulator has to decide how much coverage is worth the added
+cost. The table below lays out that trade-off as four concrete scenarios,
+from monitoring only a plant's direct signatory suppliers up to monitoring
+every direct and tier-1 indirect supplier regardless of sourcing commitment.
+
 {_table_expansion(expansion)}
 
 {_image(f'{figures_relative}/figure_6_expansion_pathways.png', 'Figure 6. Monitored area and slaughter-volume coverage under four expansion scenarios.')}
 
-Adding non-signatory direct suppliers to the monitored footprint captures far
-more of the slaughter volume in this synthetic scenario than adding tier-1
-indirect suppliers of signatory plants does, but it also requires monitoring
-a substantially larger area, illustrating the coverage-versus-scope trade-off
-that any traceability system has to navigate."""
+Adding non-signatory direct suppliers to the monitored footprint captures
+far more of the slaughter volume in this synthetic scenario than adding
+tier-1 indirect suppliers of signatory plants does, but it also requires
+monitoring a substantially larger area. Neither pathway is free, and this is
+exactly the coverage-versus-scope trade-off that any traceability system,
+public or private, has to navigate deliberately rather than by default."""
     )
 
     sections.append(
@@ -388,19 +490,32 @@ that any traceability system has to navigate."""
 
 {_image(f'{figures_relative}/figure_9_alternative_methods.png', 'Figure 9. Zone area under the incremental spatial-autocorrelation method compared with two simpler distance-based proxies.')}
 
-Simple proxies, such as a fixed-radius buffer around the plant, tend to
-overestimate the true supply zone because they ignore the actual geographic
-spread of a plant's supplier base; the overestimate is largest, sometimes by
-more than an order of magnitude, in plant-years where the true supply zone is
-small and tightly clustered. The median is reported above rather than the
-mean because a handful of these small-zone plant-years produce extreme
-percentage overestimates that would otherwise dominate the average. This is a
-methodological caution for anyone tempted to shortcut the distance-selection
-step to save computation time."""
+Simple proxies, such as drawing a fixed-radius buffer around the plant, tend
+to overestimate the true supply zone because they cannot see the actual
+shape of a plant's supplier base. A fixed radius treats a scattered ring of
+farms and a tight cluster the same way, the same way a single circle drawn
+around a group of houses would badly misrepresent them if the houses
+actually lined up along one road instead of spreading out evenly in every
+direction. The overestimate is largest, sometimes by more than an order of
+magnitude, in plant-years where the true supply zone is small and tightly
+clustered, since that is exactly where a generic circle overshoots the most.
+The median is reported above rather than the mean because a handful of
+these small-zone plant-years produce extreme percentage overestimates that
+would otherwise dominate the average and make the typical case look worse
+than it is. Either way, this is a methodological caution for anyone tempted
+to shortcut the distance-selection step in Section 7 to save computation
+time: the shortcut has a real, quantifiable cost in accuracy."""
     )
 
     sections.append(
         f"""## 12. Where the supply zone sits geographically, region by region
+
+Aggregate area totals like those in Section 3 can hide a lot: two regions
+with the same total supply-zone area could look completely different if one
+has that area concentrated in a single corner while the other has it spread
+thinly across the whole territory. The map below breaks the cumulative
+signatory direct zone down by region, showing what share of each region's
+own territory it actually covers.
 
 {_image(f'{figures_relative}/figure_11_state_coverage_map.png', "Figure 11. Share of each region's territory that falls inside the cumulative signatory direct supply zone.")}"""
     )
@@ -408,19 +523,24 @@ step to save computation time."""
     sections.append(
         """## 13. Limitations
 
+Every workflow makes simplifying choices, and being explicit about them is
+part of what makes a method trustworthy. The most important ones here are:
+
 - **All data are synthetic.** Every property boundary, transaction, and
   slaughterhouse in this repository was generated for testing purposes and
   carries no relationship to actual locations, companies, or individuals.
+  No result in this report should be read as a claim about any real place.
 - **The open-source distance-selection and aggregation methods are declared
   analogues, not certified reproductions,** of the original study's ArcGIS
   Pro routines; see `docs/ARCGIS_EQUIVALENCE.md` for a line-by-line
-  comparison of assumptions.
+  comparison of assumptions between the two.
 - **Land-use and deforestation layers are simplified** into four classes and
   a single annual raster; the original study's underlying data sources are
-  richer.
+  considerably richer and would need to be substituted for any empirical
+  application.
 - **Supplier-hull and radial-buffer comparisons are illustrative proxies**
-  built for this repository; they should not be read as a critique of any
-  specific commercial GIS workflow.
+  built for this repository to make Section 11's point concretely; they
+  should not be read as a critique of any specific commercial GIS workflow.
 
 ## 14. How to reproduce every number in this report
 
@@ -432,10 +552,13 @@ python -m supply_zones all --clean
 pytest
 ```
 
-This regenerates the synthetic input data, reruns every analytical step
-described above, rebuilds every figure and table referenced in this report
-(including this document itself), and runs the automated QA gates in
-`outputs/qa/QA_REPORT.md`.
+Running these four commands regenerates the synthetic input data from
+scratch, reruns every analytical step described above in the same order,
+rebuilds every figure and table referenced in this report, including this
+document itself, and runs the automated QA gates recorded in
+`outputs/qa/QA_REPORT.md`. Because the process starts from a fixed random
+seed, repeating it should reproduce substantively identical results every
+time, which is the whole point of building the workflow this way.
 
 ## Citation
 

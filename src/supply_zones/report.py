@@ -19,13 +19,19 @@ import pandas as pd
 from supply_zones.config import ensure_directories
 from supply_zones.report_charts import ZONE_LABELS, create_report_charts
 
+SOURCE_CITATION = (
+    "Brandão Jr., A., Rausch, L., Munger, J., & Gibbs, H. K. (2023). Mapping "
+    "slaughterhouse supply zones in the Brazilian Amazon with cattle transit "
+    "records. *Land*, *12*(9), 1782. https://doi.org/10.3390/land12091782"
+)
+
 DISCLAIMER = (
     "> **A note on the data.** Every figure, table, and number in this report is "
     "computed from a fictitious dataset built specifically for this repository. "
     "No confidential cattle-transit (GTA), rural property registry (CAR), or "
     "slaughterhouse record is used or reproduced anywhere in this document. The "
-    "workflow reconstructs the *analytical logic* of Brandão Jr. et al. (2023, "
-    "*Land*, 12(9), 1782) in open-source tools, not its empirical findings."
+    f"workflow reconstructs the *analytical logic* of {SOURCE_CITATION} in "
+    "open-source tools, not its empirical findings."
 )
 
 
@@ -212,7 +218,7 @@ def build_report(cfg: dict, zones: gpd.GeoDataFrame, results: dict) -> Path:
     sections.append(
         f"""# Mapping Slaughterhouse Supply Zones: A Reproducible, Geographically Generic Walkthrough
 
-**A plain-language companion to Brandão Jr., Rausch, Munger & Gibbs (2023), *Land*, 12(9), 1782**
+**A plain-language companion to {SOURCE_CITATION}**
 
 {DISCLAIMER}
 
@@ -521,7 +527,7 @@ own territory it actually covers.
     )
 
     sections.append(
-        """## 13. Limitations
+        f"""## 13. Limitations
 
 Every workflow makes simplifying choices, and being explicit about them is
 part of what makes a method trustworthy. The most important ones here are:
@@ -562,8 +568,13 @@ time, which is the whole point of building the workflow this way.
 
 ## Citation
 
-Please cite the original article for the underlying method, and
-`CITATION.cff` in this repository for the synthetic reproduction code."""
+For the underlying method, please cite:
+
+> {SOURCE_CITATION}
+
+For this synthetic, open-source reproduction of the method, cite `CITATION.cff`
+in this repository, which records both the article above and the software
+itself."""
     )
 
     report_path = report_dir / "REPORT.md"

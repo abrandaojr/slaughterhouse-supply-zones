@@ -1,8 +1,8 @@
 # Mapping Slaughterhouse Supply Zones: A Reproducible, Geographically Generic Walkthrough
 
-**A plain-language companion to Brandão Jr., Rausch, Munger & Gibbs (2023), *Land*, 12(9), 1782**
+**A plain-language companion to Brandão Jr., A., Rausch, L., Munger, J., & Gibbs, H. K. (2023). Mapping slaughterhouse supply zones in the Brazilian Amazon with cattle transit records. *Land*, *12*(9), 1782. https://doi.org/10.3390/land12091782**
 
-> **A note on the data.** Every figure, table, and number in this report is computed from a fictitious dataset built specifically for this repository. No confidential cattle-transit (GTA), rural property registry (CAR), or slaughterhouse record is used or reproduced anywhere in this document. The workflow reconstructs the *analytical logic* of Brandão Jr. et al. (2023, *Land*, 12(9), 1782) in open-source tools, not its empirical findings.
+> **A note on the data.** Every figure, table, and number in this report is computed from a fictitious dataset built specifically for this repository. No confidential cattle-transit (GTA), rural property registry (CAR), or slaughterhouse record is used or reproduced anywhere in this document. The workflow reconstructs the *analytical logic* of Brandão Jr., A., Rausch, L., Munger, J., & Gibbs, H. K. (2023). Mapping slaughterhouse supply zones in the Brazilian Amazon with cattle transit records. *Land*, *12*(9), 1782. https://doi.org/10.3390/land12091782 in open-source tools, not its empirical findings.
 
 ## Executive summary
 
@@ -383,5 +383,10 @@ time, which is the whole point of building the workflow this way.
 
 ## Citation
 
-Please cite the original article for the underlying method, and
-`CITATION.cff` in this repository for the synthetic reproduction code.
+For the underlying method, please cite:
+
+> Brandão Jr., A., Rausch, L., Munger, J., & Gibbs, H. K. (2023). Mapping slaughterhouse supply zones in the Brazilian Amazon with cattle transit records. *Land*, *12*(9), 1782. https://doi.org/10.3390/land12091782
+
+For this synthetic, open-source reproduction of the method, cite `CITATION.cff`
+in this repository, which records both the article above and the software
+itself.

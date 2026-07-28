@@ -51,3 +51,14 @@ def test_report_contains_all_expected_sections():
     assert not missing_sections, f"Missing report sections: {missing_sections}"
     assert "fictitious" in text.lower()
 
+
+def test_report_pdf_exists_when_pandoc_available():
+    import shutil
+
+    root = Path(__file__).resolve().parents[1]
+    pdf_path = root / "outputs" / "report" / "REPORT.pdf"
+    if shutil.which("pandoc") is None or shutil.which("wkhtmltopdf") is None:
+        return  # PDF export is an optional convenience; skip if the tools aren't installed
+    assert pdf_path.exists(), "Run `python -m supply_zones all --clean` or `python -m supply_zones report`"
+    assert pdf_path.stat().st_size > 10_000, "REPORT.pdf looks too small to contain the rendered report"
+

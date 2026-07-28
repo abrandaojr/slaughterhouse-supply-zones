@@ -9,6 +9,8 @@ derived exclusively from the synthetic outputs already produced by
 
 from __future__ import annotations
 
+import shutil
+import subprocess
 from pathlib import Path
 
 import geopandas as gpd
@@ -443,4 +445,52 @@ Please cite the original article for the underlying method, and
 
     report_path = report_dir / "REPORT.md"
     report_path.write_text("\n\n".join(sections) + "\n", encoding="utf-8")
+    build_pdf_report(report_path)
     return report_path
+
+
+def build_pdf_report(report_path: Path) -> Path | None:
+    """Render ``REPORT.md`` to a matching ``REPORT.pdf`` alongside it.
+
+    Uses ``pandoc`` (with the ``wkhtmltopdf`` PDF engine) so the Markdown's
+    tables and embedded figures render as they would in a browser, styled
+    with ``report_style.css``. This is a visual convenience on top of the
+    Markdown source, not a separate source of truth: if ``pandoc`` or
+    ``wkhtmltopdf`` is not installed, PDF generation is skipped with a clear
+    message rather than failing the pipeline, since the Markdown report
+    alone already satisfies full reproducibility.
+    """
+    if shutil.which("pandoc") is None or shutil.which("wkhtmltopdf") is None:
+        print(
+            "[report] Skipping PDF export: `pandoc` and `wkhtmltopdf` are both "
+            "required on PATH. Install them (e.g. `apt-get install pandoc "
+            "wkhtmltopdf`) to enable it; the Markdown report is unaffected."
+        )
+        return None
+
+    css_path = Path(__file__).resolve().parent / "report_style.css"
+    pdf_path = report_path.with_suffix(".pdf")
+    try:
+        subprocess.run(
+            [
+                "pandoc",
+                report_path.name,
+                "-o",
+                pdf_path.name,
+                "--pdf-engine=wkhtmltopdf",
+                "--css",
+                str(css_path),
+                "--metadata",
+                "title=Mapping Slaughterhouse Supply Zones",
+                "--quiet",
+            ],
+            cwd=report_path.parent,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        print(f"[report] PDF export failed ({exc.stderr.strip()[:500]}); the Markdown report is unaffected.")
+        return None
+    print(f"[report] Wrote {pdf_path}")
+    return pdf_path

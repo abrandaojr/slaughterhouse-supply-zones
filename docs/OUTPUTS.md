@@ -30,6 +30,7 @@ The original six PNG files mirror the topics of Figures 1–3 and Supplementary 
 | `figure_10_zone_overlap_heatmap.png` | Pairwise Jaccard overlap between the four zone types |
 | `figure_11_state_coverage_map.png` | Share of each state's area inside the cumulative CA-direct zone |
 | `report/REPORT.md` | A single, plain-language Markdown report assembling every figure and table above with interpretation for a non-specialist reader |
+| `report/REPORT.pdf` | The same report rendered to PDF via `pandoc` + `wkhtmltopdf` (skipped with a message if either is not installed; the Markdown report is the source of truth either way) |
 
 Run `python -m supply_zones report` to rebuild only the report and its dedicated figures from already-computed tables, or `python -m supply_zones all` to regenerate everything from scratch.
 

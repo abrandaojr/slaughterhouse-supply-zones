@@ -1,0 +1,91 @@
+body {
+    font-family: "DejaVu Sans", Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #222222;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 12px;
+}
+
+h1 {
+    font-size: 20pt;
+    margin-top: 0;
+    margin-bottom: 6px;
+    color: #111111;
+}
+
+h2 {
+    font-size: 14pt;
+    margin-top: 28px;
+    margin-bottom: 10px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #CCCCCC;
+    color: #111111;
+    page-break-after: avoid;
+}
+
+p {
+    margin: 10px 0;
+    text-align: justify;
+}
+
+blockquote {
+    background: #F5F5F0;
+    border-left: 4px solid #999999;
+    margin: 14px 0;
+    padding: 10px 14px;
+    font-size: 10pt;
+    color: #444444;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 14px 0;
+    font-size: 9.5pt;
+}
+
+th, td {
+    border: 1px solid #CCCCCC;
+    padding: 5px 8px;
+    text-align: left;
+}
+
+th {
+    background: #F0F0EC;
+    font-weight: bold;
+}
+
+img {
+    max-width: 100%;
+    display: block;
+    margin: 14px auto;
+    page-break-inside: avoid;
+}
+
+em {
+    display: block;
+    text-align: center;
+    font-size: 9pt;
+    color: #666666;
+    margin-top: -6px;
+    margin-bottom: 18px;
+}
+
+code, pre {
+    font-family: "DejaVu Sans Mono", monospace;
+    background: #F5F5F5;
+    font-size: 9.5pt;
+}
+
+pre {
+    padding: 10px;
+    border: 1px solid #DDDDDD;
+    border-radius: 3px;
+    overflow-x: auto;
+}
+
+strong {
+    color: #111111;
+}

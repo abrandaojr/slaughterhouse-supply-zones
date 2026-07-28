@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+title: "Synthetic Python workflow for mapping slaughterhouse supply zones"
+message: "Please cite both this software and the associated article."
+type: software
+authors:
+  - family-names: "Brandão Jr."
+    given-names: "Amintas"
+version: 1.0.0
+date-released: 2026-07-28
+license: MIT
+preferred-citation:
+  type: article
+  authors:
+    - family-names: "Brandão Jr."
+      given-names: "Amintas"
+    - family-names: "Rausch"
+      given-names: "Lisa"
+    - family-names: "Munger"
+      given-names: "Jacob"
+    - family-names: "Gibbs"
+      given-names: "Holly K."
+  title: "Mapping Slaughterhouse Supply Zones in the Brazilian Amazon with Cattle Transit Records"
+  journal: "Land"
+  volume: 12
+  issue: 9
+  year: 2023
+  doi: "10.3390/land12091782"
+

@@ -1,0 +1,13 @@
+{
+  "seed": 1782,
+  "crs": "EPSG:5880",
+  "years": [
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018
+  ],
+  "warning": "Every record, name, identifier, geometry, and value is fictitious."
+}

@@ -1,0 +1,48 @@
+project:
+  name: synthetic-slaughterhouse-supply-zones
+  seed: 1782
+  years: [2013, 2014, 2015, 2016, 2017, 2018]
+  crs: EPSG:5880
+  analysis_note: All entities and measurements are fictitious.
+
+synthetic:
+  properties_per_state: 72
+  slaughterhouses_per_state: 4
+  cell_size_m: 10000
+  unmatched_gta_fraction: 0.18
+  deliberately_ambiguous_fraction: 0.03
+
+selection:
+  minimum_annual_slaughter_heads: 1000
+  minimum_transaction_heads: 16
+  require_inspection_code: true
+
+autocorrelation:
+  minimum_distance_km: 50
+  maximum_distance_km: 220
+  interval_km: 10
+  permutations: 99
+  minimum_suppliers: 4
+
+zones:
+  cattle_volume_coverage: 0.95
+  simplify_tolerance_m: 1000
+  maximum_aggregation_distance_km: 160
+
+land_use:
+  classes:
+    1: natural_vegetation
+    2: pasture
+    3: soybean
+    4: other
+
+deforestation:
+  amazon_minimum_mapping_unit_ha: 6.25
+  cerrado_minimum_mapping_unit_ha: 1.0
+  exclude_biomes: [Pantanal]
+  carbon_to_co2: 3.6666666667
+
+qa:
+  area_relative_tolerance: 0.001
+  minimum_expected_matching_rate: 0.70
+  maximum_expected_matching_rate: 0.95

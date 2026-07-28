@@ -1,0 +1,124 @@
+{
+  "overall_status": "PASS",
+  "checks": [
+    {
+      "check": "linked_property_key_unique",
+      "status": "PASS",
+      "observed": 170,
+      "expected": "170 unique GTA property identifiers"
+    },
+    {
+      "check": "linked_geometries_valid",
+      "status": "PASS",
+      "observed": 170,
+      "expected": "170 valid, non-empty geometries"
+    },
+    {
+      "check": "projected_equal_area_crs",
+      "status": "PASS",
+      "observed": "EPSG:5880",
+      "expected": "projected CRS EPSG:5880"
+    },
+    {
+      "check": "matching_rate_plausible",
+      "status": "PASS",
+      "observed": 0.787,
+      "expected": "0.70\u20130.95"
+    },
+    {
+      "check": "record_linkage_false_positives",
+      "status": "PASS",
+      "observed": 0,
+      "expected": "0"
+    },
+    {
+      "check": "expected_links_recovered",
+      "status": "PASS",
+      "observed": 170,
+      "expected": "170"
+    },
+    {
+      "check": "supplier_years_complete",
+      "status": "PASS",
+      "observed": [
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018
+      ],
+      "expected": "[2013, 2014, 2015, 2016, 2017, 2018]"
+    },
+    {
+      "check": "supplier_transaction_threshold",
+      "status": "PASS",
+      "observed": 16,
+      "expected": ">= 16 heads after aggregation"
+    },
+    {
+      "check": "supplier_role_keys_unique",
+      "status": "PASS",
+      "observed": 0,
+      "expected": "0"
+    },
+    {
+      "check": "zone_geometries_valid",
+      "status": "PASS",
+      "observed": 144,
+      "expected": "144 valid, non-empty zones"
+    },
+    {
+      "check": "zone_area_recalculation",
+      "status": "PASS",
+      "observed": 0.0,
+      "expected": "<= 0.001"
+    },
+    {
+      "check": "four_zone_types_present",
+      "status": "PASS",
+      "observed": [
+        "CA_direct",
+        "CA_tier1_indirect",
+        "non_CA_direct",
+        "non_CA_tier1_indirect"
+      ],
+      "expected": [
+        "CA_direct",
+        "CA_tier1_indirect",
+        "non_CA_direct",
+        "non_CA_tier1_indirect"
+      ]
+    },
+    {
+      "check": "land_use_class_values",
+      "status": "PASS",
+      "observed": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "check": "transaction_ids_unique",
+      "status": "PASS",
+      "observed": 2979,
+      "expected": "2979"
+    },
+    {
+      "check": "required_outputs_exist",
+      "status": "PASS",
+      "observed": [],
+      "expected": "no missing files"
+    }
+  ]
+}

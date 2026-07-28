@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "brandao-supply-zones"
+version = "1.0.0"
+description = "Synthetic Python reproduction of slaughterhouse supply-zone methods"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [{name = "Amintas Brandão Jr."}]
+dependencies = [
+  "geopandas>=1.0",
+  "matplotlib>=3.8",
+  "numpy>=1.26",
+  "pandas>=2.2",
+  "pyogrio>=0.9",
+  "pyproj>=3.6",
+  "PyYAML>=6.0",
+  "rasterio>=1.3",
+  "scipy>=1.12",
+  "shapely>=2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+
+[project.scripts]
+supply-zones = "supply_zones.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+

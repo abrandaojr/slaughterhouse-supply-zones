@@ -1,0 +1,16 @@
+check,status,observed,expected
+linked_property_key_unique,PASS,170,170 unique GTA property identifiers
+linked_geometries_valid,PASS,170,"170 valid, non-empty geometries"
+projected_equal_area_crs,PASS,EPSG:5880,projected CRS EPSG:5880
+matching_rate_plausible,PASS,0.787,0.70–0.95
+record_linkage_false_positives,PASS,0,0
+expected_links_recovered,PASS,170,170
+supplier_years_complete,PASS,"[2013, 2014, 2015, 2016, 2017, 2018]","[2013, 2014, 2015, 2016, 2017, 2018]"
+supplier_transaction_threshold,PASS,16,>= 16 heads after aggregation
+supplier_role_keys_unique,PASS,0,0
+zone_geometries_valid,PASS,144,"144 valid, non-empty zones"
+zone_area_recalculation,PASS,0.0,<= 0.001
+four_zone_types_present,PASS,"['CA_direct', 'CA_tier1_indirect', 'non_CA_direct', 'non_CA_tier1_indirect']","['CA_direct', 'CA_tier1_indirect', 'non_CA_direct', 'non_CA_tier1_indirect']"
+land_use_class_values,PASS,"[0, 1, 2, 3, 4]","[0, 1, 2, 3, 4]"
+transaction_ids_unique,PASS,2979,2979
+required_outputs_exist,PASS,[],no missing files

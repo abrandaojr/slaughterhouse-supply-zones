@@ -12,6 +12,10 @@ pytest
 
 The fixed random seed is `1782`. Running the workflow twice with the same dependency versions and configuration should reproduce the same source tables and substantively identical spatial results. GeoPackage byte hashes may change because container metadata and feature ordering can vary across GDAL versions.
 
+## Continuous integration
+
+`.github/workflows/reproduce.yml` runs the full pipeline (including PDF export via `pandoc`/`wkhtmltopdf`) and the test suite on every push and pull request. On pushes to `main`, it also commits any regenerated files under `data/` and `outputs/` (including `outputs/report/REPORT.pdf`) back to the branch, so the committed outputs never drift out of sync with the code that produced them. That auto-commit carries `[skip ci]` in its message to avoid re-triggering the workflow on itself.
+
 ## Recommended archive record
 
 Record:
